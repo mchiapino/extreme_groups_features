@@ -182,38 +182,13 @@ list_charged_faces : groups of features that are asymptotically dependent.
 
 """
 
-dim = 10
-max_size = 8
-p_geom = 0.3
-n_datasets = 5
-n_samples = int(20e4)
-alphas = {}
-datasets = {}
-list_charged_faces = [[1, 5],
-                      [5, 3],
-                      [3, 1],
-                      [2, 3, 4],
-                      [3, 4, 6],
-                      [2, 3, 6],
-                      [4, 2, 6],
-                      [6, 7, 8, 9, 0]]
-nb_faces = len(list_charged_faces)
-for i in xrange(n_datasets):
-    print i, '/', n_datasets
-    x_raw = sevd.asym_logistic_noise_anr(dim, list_charged_faces, n_samples)
-    datasets[i] = x_raw
-path = 'logistic_datasets/'
-data_filename = 'test0_' + 'logistic_' + str(dim) + '_' + str(nb_faces) + '.p'
-with open(path + data_filename, 'wb') as f:
-    pickle.dump(datasets, f)
-
-
-##############
-# Script Eta #
-##############
-
-
 # dim = 10
+# max_size = 8
+# p_geom = 0.3
+# n_datasets = 5
+# n_samples = int(20e4)
+# alphas = {}
+# datasets = {}
 # list_charged_faces = [[1, 5],
 #                       [5, 3],
 #                       [3, 1],
@@ -223,37 +198,67 @@ with open(path + data_filename, 'wb') as f:
 #                       [4, 2, 6],
 #                       [6, 7, 8, 9, 0]]
 # nb_faces = len(list_charged_faces)
+# for i in xrange(n_datasets):
+#     print i, '/', n_datasets
+#     x_raw = sevd.asym_logistic_noise_anr(dim, list_charged_faces, n_samples)
+#     datasets[i] = x_raw
 # path = 'logistic_datasets/'
 # data_filename = 'test0_' + 'logistic_' + str(dim) + '_' + str(nb_faces) + '.p'
-# with open(path + data_filename, 'rb') as f:
-#     x_raw = pickle.load(f)
-# print 'datasets load'
-# ind_dataset = 1
-# x_rank = rank_transformation(x_raw[ind_dataset])
-# k = 2000
-# x_bin_k = extreme_points_bin(x_rank, k)
-# x_bin_2k = extreme_points_bin(x_rank, 2*k)
-# x_bin_kp = extreme_points_bin(x_rank, k + int(k**3./4))
-# x_bin_km = extreme_points_bin(x_rank, k - int(k**3./4))
+# with open(path + data_filename, 'wb') as f:
+#     pickle.dump(datasets, f)
 
-# # eta variance of alpha
-# delta = 0.05
-# alpha = [1, 5]
-# x_bin_k_n0 = remove_zeros_mat_bin(x_bin_k)
-# x_bin_2k_n0 = remove_zeros_mat_bin(x_bin_2k)
-# eta_alpha = eta(x_bin_k_n0, x_bin_2k_n0, alpha, k)
-# x_bin_k_n0 = remove_zeros_mat_bin(x_bin_k)
-# rho_alpha = r(x_bin_k_n0, alpha, k)
-# rhos_alpha = rhos_alpha_pairs(x_bin_k_n0, alpha, k)
-# r_p = r_partial_derv_centered(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
-# r_ij = {(i, j): r(partial_matrix(x_bin_2k, x_bin_k, j), [i, j], k)
-#         for (i, j) in it.combinations(alpha, 2)}
-# var = ((2 * (rho_alpha * np.log(2))**2)**-1 *
-#        (rho_alpha +
-#         sum([r_p[j] * (-4*rho_alpha +
-#                        2*r(partial_matrix(x_bin_2k, x_bin_k, j),
-#                            alpha, k)) for j in alpha]) +
-#         sum([r_p[i]*r_p[j] * (3*rhos_alpha[i, j] - 2*r_ij[i, j])
-#              for (i, j) in it.combinations(alpha, 2)])))
-# print 'variance =', var
-# tst = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
+
+##############
+# Script Eta #
+##############
+
+
+dim = 10
+list_charged_faces = [[1, 5],
+                      [5, 3],
+                      [3, 1],
+                      [2, 3, 4],
+                      [3, 4, 6],
+                      [2, 3, 6],
+                      [4, 2, 6],
+                      [6, 7, 8, 9, 0]]
+nb_faces = len(list_charged_faces)
+path = 'logistic_datasets/'
+data_filename = 'test0_' + 'logistic_' + str(dim) + '_' + str(nb_faces) + '.p'
+with open(path + data_filename, 'rb') as f:
+    x_raw = pickle.load(f)
+print 'datasets load'
+ind_dataset = 1
+x_rank = rank_transformation(x_raw[ind_dataset])
+k = 2000
+x_bin_k = extreme_points_bin(x_rank, k)
+x_bin_2k = extreme_points_bin(x_rank, 2*k)
+x_bin_kp = extreme_points_bin(x_rank, k + int(k**3./4))
+x_bin_km = extreme_points_bin(x_rank, k - int(k**3./4))
+
+# eta variance of alpha
+delta = 0.05
+alpha = [2, 3, 5]
+x_bin_k_n0 = remove_zeros_mat_bin(x_bin_k)
+x_bin_2k_n0 = remove_zeros_mat_bin(x_bin_2k)
+eta_alpha = eta(x_bin_k_n0, x_bin_2k_n0, alpha, k)
+x_bin_k_n0 = remove_zeros_mat_bin(x_bin_k)
+rho_alpha = r(x_bin_k_n0, alpha, k)
+rhos_alpha = rhos_alpha_pairs(x_bin_k_n0, alpha, k)
+r_p = r_partial_derv_centered(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
+r_ij = {(i, j): r(partial_matrix(x_bin_2k, x_bin_k, j), [i, j], k)
+        for (i, j) in it.combinations(alpha, 2)}
+r_ji = {(i, j): r(partial_matrix(x_bin_k, x_bin_2k, j), [i, j], k)
+        for (i, j) in it.combinations(alpha, 2)}
+var = ((2 * (rho_alpha * np.log(2))**2)**-1 *
+       (rho_alpha +
+        sum([r_p[j] * (-4*rho_alpha +
+                       2*r(partial_matrix(x_bin_2k, x_bin_k, j),
+                           alpha, k)) for j in alpha]) +
+        sum([r_p[i]*r_p[j] * (3*rhos_alpha[i, j] - 2*r_ij[i, j])
+             for (i, j) in it.combinations(alpha, 2)]) +
+        sum([r_p[i]*r_p[j] * (3*rhos_alpha[i, j] - 2*r_ji[i, j])
+             for (i, j) in it.combinations(alpha, 2)]) +
+        sum([r_p[i]**2 for i in alpha])))
+print 'variance =', var
+tst = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
