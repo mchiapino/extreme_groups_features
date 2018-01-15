@@ -101,7 +101,7 @@ def khi(binary_data, alpha):
     return all_alpha/alpha_exist
 
 
-def find_alphas(x_bin, mu):
+def all_alphas_clef(x_bin, mu):
     """
         Input:
             -x_bin = matrix(n x d), X_ij = 1 if x_extr_ij > R

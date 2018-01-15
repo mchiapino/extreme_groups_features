@@ -2,6 +2,8 @@ import numpy as np
 import pickle
 import itertools as it
 import scipy.stats as st
+import random
+import time
 
 import clef_algo as clf
 import simul_multivar_evd as sevd
@@ -112,234 +114,229 @@ def check_errors(charged_alphas, result_alphas, dim):
     return founds, misseds, falses_pure, exct_subsets, exct_supsets
 
 
-# Datasets generation
-print 'data gen'
-dim = 100
-nb_faces = 80
-max_size = 8
-p_geom = 0.3
-n_samples = int(1e5)
-as_dep = 0.1
-saved_alphas = []
-saved_datas = []
-saved_results_hill = []
-saved_results_peng = []
-saved_results_clef = []
-saved_results_clef_as = []
-saved_results_damex = []
-n_loop = 1
-for i in range(n_loop):
-    charged_alphas = sevd.random_alphas(dim, nb_faces, max_size, p_geom)
-    saved_alphas.append(charged_alphas)
-    # dep_feats = set([])
-    # for k in range(nb_faces):
-    #     dep_feats = dep_feats | set(charged_alphas[k])
-    # single_feats = [i for i in set(range(dim)) - dep_feats]
-    # charged_alphas_sf = [alpha for alpha in charged_alphas]
-    # for i in single_feats:
-    #     charged_alphas_sf.append([i])
-    x_raw = sevd.asym_logistic_noise(dim, charged_alphas, n_samples, as_dep)
-    saved_datas.append(x_raw)
-    # x_rank = rank_transformation(x_raw)
-
-    # # Damex
-    # print 'Damex'
-    # R = 500
-    # x_extr = clf.extrem_points(x_rank, R)
-    # eps = 0.05
-    # x_damex = 1*(x_extr > eps * np.max(x_extr, axis=1)[np.newaxis].T)
-    # mass = check_dataset(x_damex)
-    # alphas_res = {tuple(np.nonzero(x_damex[mass.keys()[i], :])[0]):
-    #               mass.values()[i]
-    #               for i in np.argsort(mass.values())[::-1]}
-    # alphas_damex = [list(np.nonzero(x_damex[mass.keys()[i], :])[0])
-    #                 for i in np.argsort(mass.values())[::-1]]
-    # saved_results_damex.append(alphas_damex)
-
-    # Test kappa asymptotic
-    print 'Clef asymptotic'
-    k = int(n_samples*0.003)
-    x_bin_k = extreme_points_bin(x_raw, k)
-    x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
-    x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
-    kappa_min = 0.08
-    delta = 0.0001
-    all_alphas = kas.find_alphas(kappa_min, delta, x_bin_k,
-                                 x_bin_kp, x_bin_km, k)
-    maximal_alphas = clf.find_maximal_alphas(all_alphas)
-    list_alphas = [alpha for alphas in maximal_alphas for alpha in alphas]
-    saved_results_clef_as.append(list_alphas)
-
-    # # # Test Clef
-    # # print 'Clef'
-    # # mu = 0.04
-    # # k = 500
-    # # x_bin = extreme_points_bin(x_raw, k)
-    # # A = clf.find_alphas(x_bin, mu)
-    # # maximal_alphas_ = clf.find_maximal_alphas(A)
-    # # list_alphas = [alpha for alphas_k in maximal_alphas_ for
-    # #                alpha in alphas_k]
-    # # saved_results_clef.append(list_alphas)
-
-    # Test Hill
-    print 'Hill'
-    k = int(n_samples*0.003)
-    x_bin_k = extreme_points_bin(x_raw, k)
-    x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
-    x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
-    delta = 0.0001
-    all_alphas = hill.all_alphas_hill(x_raw, x_bin_k, x_bin_kp, x_bin_km,
-                                      delta, k)
-    maximal_alphas = clf.find_maximal_alphas(all_alphas)
-    list_alphas = [alpha for alphas in maximal_alphas for alpha in alphas]
-    saved_results_hill.append(list_alphas)
-
-    # # Test Peng
-    # print 'Peng'
-    # k = 300
-    # x_bin_k = extreme_points_bin(x_raw, k)
-    # x_bin_2k = extreme_points_bin(x_raw, 2*k)
-    # x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
-    # x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
-    # delta = 0.001
-    # all_alphas = peng.all_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km,
-    #                                   delta, k)
-    # maximal_alphas = clf.find_maximal_alphas(all_alphas)
-    # list_alphas_peng = [alpha for alphas in maximal_alphas for alpha in alphas]
-    # saved_results_peng.append(list_alphas_peng)
-
-# n_samples = int(1.5e5)
-# saved_alphas_2 = []
-# saved_datas_2 = []
-# saved_results_hill_2 = []
-# saved_results_peng_2 = []
-# saved_results_clef_2 = []
-# saved_results_clef_as_2 = []
-# saved_results_damex_2 = []
-# n_loop = 20
+# t0 = time.clock()
+# # Datasets generation
+# print 'data gen'
+# dim = 100
+# nb_faces = 80
+# max_size = 8
+# p_geom = 0.3
+# n_samples = int(1e5)
+# as_dep = 0.1
+# saved_alphas = []
+# saved_results_hill = {}
+# saved_results_peng = {}
+# saved_results_kappa = {}
+# saved_results_clef = {}
+# saved_results_damex = {}
+# for p_k in [0.0075, 0.005]:
+#     for delta in [0.0001]:
+#         saved_results_hill[(p_k, delta)] = []
+#         saved_results_peng[(p_k, delta)] = []
+#         saved_results_kappa[(p_k, delta)] = []
+#     saved_results_clef[p_k] = []
+#     saved_results_damex[p_k] = []
+# saved_seeds = []
+# n_loop = 1
 # for i in range(n_loop):
+#     # random.seed(i)
+#     # saved_seeds.append(i)
 #     charged_alphas = sevd.random_alphas(dim, nb_faces, max_size, p_geom)
-#     saved_alphas_2.append(charged_alphas)
-#     dep_feats = set([])
-#     for k in range(nb_faces):
-#         dep_feats = dep_feats | set(charged_alphas[k])
-#     single_feats = [i for i in set(range(dim)) - dep_feats]
-#     charged_alphas_sf = [alpha for alpha in charged_alphas]
-#     for i in single_feats:
-#         charged_alphas_sf.append([i])
-#     x_raw = sevd.asym_logistic_noise(dim, charged_alphas_sf,
-#                                      n_samples, as_dep)
-#     saved_datas_2.append(x_raw)
+#     saved_alphas.append(charged_alphas)
+#     x_raw = sevd.asym_logistic_noise(dim, charged_alphas, n_samples, as_dep)
 
-#     # # Damex
-#     # print 'Damex'
-#     # R = 500
-#     # x_extr = clf.extrem_points(x_raw, R)
-#     # eps = 0.05
-#     # x_damex = 1*(x_extr > eps * np.max(x_extr, axis=1)[np.newaxis].T)
-#     # mass = check_dataset(x_damex)
-#     # alphas_res = {tuple(np.nonzero(x_damex[mass.keys()[i], :])[0]):
-#     #               mass.values()[i]
-#     #               for i in np.argsort(mass.values())[::-1]}
-#     # alphas_damex = [list(np.nonzero(x_damex[mass.keys()[i], :])[0])
-#     #                 for i in np.argsort(mass.values())[::-1]]
-#     # saved_results_damex_2.append(alphas_damex)
+#     for p_k in [0.0075, 0.005]:
+#         k = int(n_samples*p_k)
+#         x_bin_k = extreme_points_bin(x_raw, k)
+#         x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
+#         x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
+#         for delta in [0.0001]:
 
-#     # Test kappa asymptotic
-#     print 'Clef asymptotic'
-#     k = int(n_samples*0.003)
-#     x_bin_k = extreme_points_bin(x_raw, k)
-#     x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
-#     x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
-#     kappa_min = 0.08
-#     delta = 0.0001
-#     all_alphas = kas.find_alphas(kappa_min, delta, x_bin_k,
-#                                  x_bin_kp, x_bin_km, k)
-#     maximal_alphas = clf.find_maximal_alphas(all_alphas)
-#     list_alphas = [alpha for alphas in maximal_alphas for alpha in alphas]
-#     saved_results_clef_as_2.append(list_alphas)
+#             # # Test Hill
+#             # alphas_hill_0 = hill.all_alphas_hill(x_raw, x_bin_k, x_bin_kp,
+#             #                                      x_bin_km, delta, k)
+#             # max_alphas_hill = clf.find_maximal_alphas(alphas_hill_0)
+#             # alphas_hill = [alpha for alphas in max_alphas_hill for
+#             #                alpha in alphas]
+#             # saved_results_hill[(p_k, delta)].append(alphas_hill)
 
-#     # # Test Clef
-#     # print 'Clef'
-#     # mu = 0.035
-#     # k = 500
-#     # x_bin = extreme_points_bin(x_raw, k)
-#     # A = clf.find_alphas(x_bin, mu)
-#     # maximal_alphas_ = clf.find_maximal_alphas(A)
-#     # list_alphas = [alpha for alphas_k in maximal_alphas_ for
-#     #                alpha in alphas_k]
-#     # saved_results_clef_2.append(list_alphas)
+#             # # Test Peng
+#             # x_bin_2k = extreme_points_bin(x_raw, 2*k)
+#             # alphas_peng_0 = peng.all_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp,
+#             #                                      x_bin_km, delta, k)
+#             # max_alphas_peng = clf.find_maximal_alphas(alphas_peng_0)
+#             # alphas_peng = [alpha for alphas in max_alphas_peng for
+#             #                alpha in alphas]
+#             # saved_results_peng[(p_k, delta)].append(alphas_peng)
 
-#     # Test Hill
-#     print 'Hill'
-#     k = int(n_samples*0.003)
-#     x_bin_k = extreme_points_bin(x_raw, k)
-#     x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
-#     x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
-#     delta = 0.0001
-#     all_alphas = hill.all_alphas_hill(x_raw, x_bin_k, x_bin_kp, x_bin_km,
-#                                       delta, k)
-#     maximal_alphas = clf.find_maximal_alphas(all_alphas)
-#     list_alphas = [alpha for alphas in maximal_alphas for alpha in alphas]
-#     saved_results_hill_2.append(list_alphas)
+#             # Test Kappa
+#             kappa_min = 0.05
+#             alphas_kappa_0 = kas.all_alphas_kappa(kappa_min, x_bin_k, x_bin_kp,
+#                                                   x_bin_km, delta, k)
+#             max_alphas_kappa = clf.find_maximal_alphas(alphas_kappa_0)
+#             alphas_kappa = [alpha for alphas in max_alphas_kappa for
+#                             alpha in alphas]
+#             saved_results_kappa[(p_k, delta)].append(alphas_kappa)
 
-#     # # Test Peng
-#     # print 'Peng'
-#     # k = 100
-#     # x_bin_k = extreme_points_bin(x_raw, k)
-#     # x_bin_2k = extreme_points_bin(x_raw, 2*k)
-#     # x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
-#     # x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
-#     # delta = 0.001
-#     # all_alphas = peng.all_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km,
-#     #                                   delta, k)
-#     # maximal_alphas = clf.find_maximal_alphas(all_alphas)
-#     # list_alphas_peng = [alpha for alphas in maximal_alphas for alpha in alphas]
-#     # saved_results_peng_2.append(list_alphas_peng)
+#         # # Test Clef
+#         # kappa_min = 0.05
+#         # alphas_clef_0 = clf.all_alphas_clef(x_bin_k, kappa_min)
+#         # max_alphas_clef = clf.find_maximal_alphas(alphas_clef_0)
+#         # alphas_clef = [alpha for alphas in max_alphas_clef for
+#         #                alpha in alphas]
+#         # saved_results_clef[p_k].append(alphas_clef)
 
-# n_samples = int(2e5)
-# saved_alphas_3 = []
-# saved_datas_3 = []
-# saved_results_hill_3 = []
-# saved_results_clef_as_3 = []
-# n_loop = 20
-# for i in range(n_loop):
-#     charged_alphas = sevd.random_alphas(dim, nb_faces, max_size, p_geom)
-#     saved_alphas_3.append(charged_alphas)
-#     dep_feats = set([])
-#     for k in range(nb_faces):
-#         dep_feats = dep_feats | set(charged_alphas[k])
-#     single_feats = [i for i in set(range(dim)) - dep_feats]
-#     charged_alphas_sf = [alpha for alpha in charged_alphas]
-#     for i in single_feats:
-#         charged_alphas_sf.append([i])
-#     x_raw = sevd.asym_logistic_noise(dim, charged_alphas_sf,
-#                                      n_samples, as_dep)
-#     saved_datas_3.append(x_raw)
+#         # # Test Damex
+#         # eps = 0.1
+#         # R = n_samples/float(k)
+#         # x_rank = clf.rank_transformation(x_raw)
+#         # x_extr = x_rank[np.nonzero(np.max(x_rank, axis=1) > R)]
+#         # x_damex = 1*(x_extr > eps*R)
+#         # alphas_damex_0 = check_dataset(x_damex)
+#         # alphas_damex = [list(np.nonzero(x_damex[alphas_damex_0.keys()[i],
+#         #                                         :])[0])
+#         #                 for i in np.argsort(alphas_damex_0.values())[::-1]]
+#         # saved_results_damex[p_k].append(alphas_damex)
+# t = time.clock() - t0
 
-#     # Test kappa asymptotic
-#     print 'Clef asymptotic'
-#     k = int(n_samples*0.003)
-#     x_bin_k = extreme_points_bin(x_raw, k)
-#     x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
-#     x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
-#     kappa_min = 0.08
-#     delta = 0.0001
-#     all_alphas = kas.find_alphas(kappa_min, delta, x_bin_k,
-#                                  x_bin_kp, x_bin_km, k)
-#     maximal_alphas = clf.find_maximal_alphas(all_alphas)
-#     list_alphas = [alpha for alphas in maximal_alphas for alpha in alphas]
-#     saved_results_clef_as_3.append(list_alphas)
+alphas_file_5e4_010075_0 = open('results/alphas_file_5e4_010075_0.p', 'r')
+alphas = pickle.load(alphas_file_5e4_010075_0)
+alphas_file_5e4_010075_0.close()
+kappa_test = open('results/kappa_file_1e5_kappa_0.p', 'r')
+k_t = pickle.load(kappa_test)
+kappa_test.close()
+m_kapp = {}
+for p_k in [0.01, 0.0075, 0.005, 0.0025]:
+    for delta in [0.001, 0.0001]:
+        m_kapp[(p_k, delta)] = np.mean([map(len,
+                                            check_errors(alphas[i],
+                                                         k_t[(p_k,
+                                                              delta)][i],
+                                                         100))
+                                        for i in range(10)], axis=0)
 
-#     # Test Hill
-#     print 'Hill'
-#     k = int(n_samples*0.003)
-#     x_bin_k = extreme_points_bin(x_raw, k)
-#     x_bin_kp = extreme_points_bin(x_raw, k + int(k**(3./4)))
-#     x_bin_km = extreme_points_bin(x_raw, k - int(k**(3./4)))
-#     delta = 0.0001
-#     all_alphas = hill.all_alphas_hill(x_raw, x_bin_k, x_bin_kp, x_bin_km,
-#                                       delta, k)
-#     maximal_alphas = clf.find_maximal_alphas(all_alphas)
-#     list_alphas = [alpha for alphas in maximal_alphas for alpha in alphas]
-#     saved_results_hill_3.append(list_alphas)
+# time_file_5e4_010075_0 = open('results/time_file_5e4_010075_0.p', 'r')
+# t = pickle.load(time_file_5e4_010075_0)
+# time_file_5e4_010075_0.close()
+# alphas_file_5e4_010075_0 = open('results/alphas_file_5e4_010075_0.p', 'r')
+# alphas = pickle.load(alphas_file_5e4_010075_0)
+# alphas_file_5e4_010075_0.close()
+# hill_file_5e4_010075_0 = open('results/hill_file_5e4_010075_0.p', 'r')
+# hill_res = pickle.load(hill_file_5e4_010075_0)
+# hill_file_5e4_010075_0.close()
+# kappa_file_5e4_010075_0 = open('results/kappa_file_5e4_010075_0.p', 'r')
+# kappa_res = pickle.load(kappa_file_5e4_010075_0)
+# kappa_file_5e4_010075_0.close()
+# peng_file_5e4_010075_0 = open('results/peng_file_5e4_010075_0.p', 'r')
+# peng_res = pickle.load(peng_file_5e4_010075_0)
+# peng_file_5e4_010075_0.close()
+# clef_file_5e4_010075_0 = open('results/clef_file_5e4_010075_0.p', 'r')
+# clef_res = pickle.load(clef_file_5e4_010075_0)
+# clef_file_5e4_010075_0.close()
+# damex_file_5e4_010075_0 = open('results/damex_file_5e4_010075_0.p', 'r')
+# damex_res = pickle.load(damex_file_5e4_010075_0)
+# damex_file_5e4_010075_0.close()
+# params_file_5e4_010075_0 = open('results/params_file_5e4_010075_0.p', 'r')
+# params = pickle.load(params_file_5e4_010075_0)
+# params_file_5e4_010075_0.close()
+
+# for i in [1, 2, 3, 4]:
+#     time_file = open('results/time_file_5e4_010075_' + str(i) + '.p', 'r')
+#     t.append(pickle.load(time_file)[0])
+#     time_file.close()
+#     alphas_file = open('results/alphas_file_5e4_010075_' + str(i) + '.p', 'r')
+#     alphas += pickle.load(alphas_file)
+#     alphas_file.close()
+#     params_file = open('results/params_file_5e4_010075_' + str(i) + '.p', 'r')
+#     params += pickle.load(params_file)
+#     params_file.close()
+#     for p_k in [0.01, 0.0075, 0.005, 0.0025]:
+#         for delta in [0.001, 0.0001]:
+#             hill_file = open('results/hill_file_5e4_010075_' +
+#                              str(i) + '.p', 'r')
+#             hill_res[(p_k, delta)] += pickle.load(hill_file)[(p_k, delta)]
+#             hill_file.close()
+#             kappa_file = open('results/kappa_file_5e4_010075_' +
+#                               str(i) + '.p', 'r')
+#             kappa_res[(p_k, delta)] += pickle.load(kappa_file)[(p_k, delta)]
+#             kappa_file.close()
+#             peng_file = open('results/peng_file_5e4_010075_' +
+#                              str(i) + '.p', 'r')
+#             peng_res[(p_k, delta)] += pickle.load(peng_file)[(p_k, delta)]
+#             peng_file.close()
+#         clef_file = open('results/clef_file_5e4_010075_' + str(i) + '.p', 'r')
+#         clef_res[p_k] += pickle.load(clef_file)[p_k]
+#         clef_file.close()
+#         damex_file = open('results/damex_file_5e4_010075_' +
+#                           str(i) + '.p', 'r')
+#         damex_res[p_k] += pickle.load(damex_file)[p_k]
+#         damex_file.close()
+
+# m_hill = {}
+# v_hill = {}
+# m_peng = {}
+# v_peng = {}
+# m_kapp = {}
+# v_kapp = {}
+# m_clef = {}
+# v_clef = {}
+# m_damex = {}
+# v_damex = {}
+# for p_k in [0.01, 0.0075, 0.005, 0.0025]:
+#     for delta in [0.001, 0.0001]:
+#         m_hill[(p_k, delta)] = np.mean([map(len,
+#                                             check_errors(alphas[i],
+#                                                          hill_res[(p_k,
+#                                                                    delta)][i],
+#                                                          100))
+#                                         for i in range(50)], axis=0)
+#         v_hill[(p_k, delta)] = np.std([map(len,
+#                                            check_errors(alphas[i],
+#                                                         hill_res[(p_k,
+#                                                                   delta)][i],
+#                                                         100))
+#                                        for i in range(50)], axis=0)
+#         m_peng[(p_k, delta)] = np.mean([map(len,
+#                                             check_errors(alphas[i],
+#                                                          peng_res[(p_k,
+#                                                                    delta)][i],
+#                                                          100))
+#                                         for i in range(50)], axis=0)
+#         v_peng[(p_k, delta)] = np.std([map(len,
+#                                            check_errors(alphas[i],
+#                                                         peng_res[(p_k,
+#                                                                   delta)][i],
+#                                                         100))
+#                                        for i in range(50)], axis=0)
+#         m_kapp[(p_k, delta)] = np.mean([map(len,
+#                                             check_errors(alphas[i],
+#                                                          kappa_res[(p_k,
+#                                                                     delta)][i],
+#                                                          100))
+#                                         for i in range(50)], axis=0)
+#         v_kapp[(p_k, delta)] = np.std([map(len,
+#                                            check_errors(alphas[i],
+#                                                         kappa_res[(p_k,
+#                                                                    delta)][i],
+#                                                         100))
+#                                        for i in range(50)], axis=0)
+#     m_clef[p_k] = np.mean([map(len,
+#                                check_errors(alphas[i],
+#                                             clef_res[p_k][i],
+#                                             100))
+#                            for i in range(50)], axis=0)
+#     v_clef[p_k] = np.std([map(len,
+#                               check_errors(alphas[i],
+#                                            clef_res[p_k][i],
+#                                            100))
+#                           for i in range(50)], axis=0)
+#     m_damex[p_k] = np.mean([map(len,
+#                                 check_errors(alphas[i],
+#                                              damex_res[p_k][i][:80],
+#                                              100))
+#                             for i in range(50)], axis=0)
+#     v_damex[p_k] = np.std([map(len,
+#                                check_errors(alphas[i],
+#                                             damex_res[p_k][i][:80],
+#                                             100))
+#                            for i in range(50)], axis=0)

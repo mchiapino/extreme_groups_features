@@ -159,6 +159,8 @@ def variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k):
     rho_alpha = r(x_bin_k, alpha, k)
     if rho_alpha == 0.:
         var = 0.
+    # if rho_alpha*k < 5:
+    #     var = 0.
     else:
         rhos_alpha = rhos_alpha_pairs(x_bin_k, alpha, k)
         r_p = r_partial_derv_centered(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
@@ -182,9 +184,10 @@ def alphas_pairs_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k):
         alpha = [i, j]
         eta = eta_hill(x_rank, alpha, k)
         var = variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
-        test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
-        if eta > test:
-            alphas.append(alpha)
+        if var > 0 or var == 0:
+            test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
+            if eta > test:
+                alphas.append(alpha)
 
     return alphas
 
@@ -198,6 +201,7 @@ def all_alphas_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k):
     A[s] = alphas_pairs
     while len(A[s]) > s:
         print s
+        print len(A[s])
         A[s + 1] = []
         G = clf.make_graph(A[s], s, dim)
         alphas_to_try = clf.find_alphas_to_try(A[s], G, s)
@@ -205,9 +209,10 @@ def all_alphas_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k):
             for alpha in alphas_to_try:
                 eta = eta_hill(x_rank, alpha, k)
                 var = variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
-                test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
-                if eta > test:
-                    A[s + 1].append(alpha)
+                if var > 0 or var == 0:
+                    test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
+                    if eta > test:
+                        A[s + 1].append(alpha)
         s += 1
 
     return A

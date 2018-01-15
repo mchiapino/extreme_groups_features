@@ -125,7 +125,7 @@ def var_kappa(x_bin_k, x_bin_kp, x_bin_km, alpha, k):
 #############
 
 
-def alphas_pairs(kappa_min, delta, x_bin_k, x_bin_kp, x_bin_km, k):
+def alphas_kappa_pairs(kappa_min, x_bin_k, x_bin_kp, x_bin_km, delta, k):
     n_dim = np.shape(x_bin_k)[1]
     alphas = []
     for (i, j) in it.combinations(range(n_dim), 2):
@@ -139,9 +139,10 @@ def alphas_pairs(kappa_min, delta, x_bin_k, x_bin_kp, x_bin_km, k):
     return alphas
 
 
-def find_alphas(kappa_min, delta, x_bin_k, x_bin_kp, x_bin_km, k):
+def all_alphas_kappa(kappa_min, x_bin_k, x_bin_kp, x_bin_km, delta, k):
     n, dim = np.shape(x_bin_k)
-    alphas = alphas_pairs(kappa_min, delta, x_bin_k, x_bin_kp, x_bin_km, k)
+    alphas = alphas_kappa_pairs(kappa_min, x_bin_k, x_bin_kp, x_bin_km,
+                                delta, k)
     s = 2
     A = {}
     A[s] = alphas

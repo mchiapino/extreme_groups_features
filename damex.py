@@ -1,5 +1,4 @@
 import numpy as np
-
 import clef_algo as clf
 
 
