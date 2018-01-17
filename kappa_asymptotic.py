@@ -147,7 +147,7 @@ def all_alphas_kappa(kappa_min, x_bin_k, x_bin_kp, x_bin_km, delta, k):
     A = {}
     A[s] = alphas
     while len(A[s]) > s:
-        print s
+        print s, ':', len(A[s])
         A[s + 1] = []
         G = clf.make_graph(A[s], s, dim)
         alphas_to_try = clf.find_alphas_to_try(A[s], G, s)

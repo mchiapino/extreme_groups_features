@@ -11,6 +11,8 @@ from scipy.spatial import ConvexHull
 
 import clef_algo as clf
 import hill_estimator as hill
+import peng_asymptotic as peng
+import kappa_asymptotic as kas
 
 #############
 # Functions #
@@ -149,32 +151,98 @@ def check_errors(charged_alphas, result_alphas, dim):
 
 # Script
 
-x_rank = np.load('hydro_data/raw_discharge.npy')
-# x_rank = np.load('hydro_data/normalized_discharge_997.npy')
-n_samples, dim = np.shape(x_rank)
+# charged_alphas = sevd.random_alphas(dim, nb_faces, max_size, p_geom)
+# saved_alphas.append(charged_alphas)
+# x_raw = sevd.asym_logistic_noise(dim, charged_alphas, n_samples, as_dep)
 
-p_k = 0.002
+x_raw = np.load('hydro_data/raw_discharge.npy')
+x_rank = clf.rank_transformation(x_raw)
+n_samples, dim = np.shape(x_raw)
+
+p_k = 0.025
 k = int(n_samples*p_k)
 x_bin_k = extreme_points_bin(x_rank, k)
 x_bin_kp = extreme_points_bin(x_rank, k + int(k**(3./4)))
 x_bin_km = extreme_points_bin(x_rank, k - int(k**(3./4)))
 n_extr = np.sum(np.sum(x_bin_k, axis=1) > 0)
 
-# Clef
-kappa_min = 0.25
-alphas_clef_0 = clf.all_alphas_clef(x_bin_k, kappa_min)
-max_alphas_clef = clf.find_maximal_alphas(alphas_clef_0)
-alphas_clef = [alpha for alphas in max_alphas_clef for
-               alpha in alphas]
+# # freq threshold (0.01, 0.02)
+# f_thresh = 0.02
+# alphas_f_0 = peng.all_alphas_f(x_bin_k, f_thresh, k)
+# max_alphas_f = clf.find_maximal_alphas(alphas_f_0)
 
-# # Hill
-# delta = 0.001
+# # r threshold (0.01, 0.4)
+# r_thresh = 0.4
+# alphas_r_0 = peng.all_alphas_r(x_bin_k, r_thresh, k)
+# max_alphas_r = clf.find_maximal_alphas(alphas_r_0)
+
+# # Damex (0.01, 0.5)
+# eps = 0.5
+# R = n_samples/(k + 1.)
+# x_rank = clf.rank_transformation(x_raw)
+# x_extr = x_rank[np.nonzero(np.max(x_rank, axis=1) > R)]
+# x_damex = 1*(x_extr > eps*R)
+# alphas_damex_0 = check_dataset(x_damex)
+# alphas_damex_mass = [(list(np.nonzero(x_damex[alphas_damex_0.keys()[i],
+#                                               :])[0]),
+#                       alphas_damex_0.values()[i])
+#                      for i in np.argsort(alphas_damex_0.values())[::-1]]
+# alphas_damex = [list(np.nonzero(x_damex[alphas_damex_0.keys()[i],
+#                                         :])[0])
+#                 for i in np.argsort(alphas_damex_0.values())[::-1]]
+# alphas_damex = alphas_damex[:100]
+# size_max = max(map(len, alphas_damex))
+# alphas_damex_size = {i: [] for i in range(2, size_max+1)}
+# for alpha in alphas_damex:
+#     alphas_damex_size[len(alpha)].append(alpha)
+# max_alphas_damex = [alphas_damex_size[s] for s in range(2, size_max+1)]
+
+# # Kappa (0.01, 0.005, 0.4)
+# delta = 0.005
+# kappa_min = 0.4
+# alphas_kappa_0 = kas.all_alphas_kappa(kappa_min, x_bin_k, x_bin_kp,
+#                                       x_bin_km, delta, k)
+# max_alphas_kappa = clf.find_maximal_alphas(alphas_kappa_0)
+# alphas_kappa = [alpha for alphas in max_alphas_kappa for
+#                 alpha in alphas]
+
+# Peng (0.01, 0.001, 0.4)
+delta = 0.01  # 0.00005
+x_bin_2k = extreme_points_bin(x_raw, 2*k)
+eta_peng_list = np.array([peng.eta_peng(x_bin_k, x_bin_2k, alpha, k) for
+                          alpha in it.combinations(range(dim), 2)])
+r_peng_list = np.array([peng.r(x_bin_k, alpha, k) for
+                        alpha in it.combinations(range(dim), 2)])
+ind_r = np.argsort(r_peng_list)
+var_peng_list = np.array([peng.var_eta_peng(x_bin_k, x_bin_2k, x_bin_kp,
+                                            x_bin_km, alpha, k) for
+                          alpha in it.combinations(range(dim), 2)])
+test_peng_list = 1 - st.norm.ppf(1 - delta) * np.sqrt(var_peng_list/float(k))
+# alphas_peng_0 = peng.all_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp,
+#                                      x_bin_km, delta, k)
+# max_alphas_peng = clf.find_maximal_alphas(alphas_peng_0)
+# alphas_peng = [alpha for alphas in max_alphas_peng for
+#                alpha in alphas]
+
+# # Clef (0.01, 0.2)
+# kappa_min = 0.2
+# R = n_samples/(k + 1.)
+# x_extr = clf.extrem_points(x_rank, R)
+# x_bin_clef = clf.above_thresh_binary(x_extr, R)
+# alphas_clef_0 = clf.all_alphas_clef(x_bin_clef, kappa_min)
+# max_alphas_clef = clf.find_maximal_alphas(alphas_clef_0)
+# alphas_clef = [alpha for alphas in max_alphas_clef for
+#                alpha in alphas]
+
+# # Hill (0.01, 0.01) (0.02, 0.0005)
+# delta = 0.0005
 # eta_list = np.array([hill.eta_hill(x_rank, alpha, k) for
 #                      alpha in it.combinations(range(dim), 2)])
 # var_list = np.array([hill.variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km,
 #                                             alpha, k) for
 #                      alpha in it.combinations(range(dim), 2)])
-# test_list = 1 - st.norm.ppf(1 - delta) * np.sqrt(var_list/float(k))
+# var_list_ = var_list * (1 - (var_list < 0))
+# test_list = 1 - st.norm.ppf(1 - delta) * np.sqrt(var_list_/float(k))
 # alphas_p = hill.alphas_pairs_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km,
 #                                   delta, k)
 # alphas_hill_0 = hill.all_alphas_hill(x_rank, x_bin_k, x_bin_kp,
@@ -183,43 +251,42 @@ alphas_clef = [alpha for alphas in max_alphas_clef for
 # alphas_hill = [alpha for alphas in max_alphas_hill for
 #                alpha in alphas]
 
-
-nb_sizes = len(max_alphas_clef)
-stations = range(dim)
-x_y = np.load('hydro_data/stations_x_y_lambert93.npy')
-x = x_y[:, 0]
-y = x_y[:, 1]
-fig, ax = plt.subplots()
-ax.scatter(x, y)
-for i, nb in enumerate(stations):
-    ax.annotate(nb, (x[i], y[i]))
-cpt = 2
-cpt_colors = 2
-patches = []
-for alphas in max_alphas_clef:
-    if len(alphas) > 0:
-        c = cm.rainbow(cpt_colors/float(nb_sizes))
-        patches.append(mpatches.Patch(color=c,
-                                      label='nb stations : ' + str(cpt)))
-        cpt += 1
-        cpt_colors += 0.75
-        for alpha in alphas:
-            plt.plot(x[alpha], y[alpha], 'o', color=c)
-            if len(alpha) > 2:
-                hull = ConvexHull(x_y[alpha])
-                for sides in hull.simplices:
-                    plt.fill(x_y[alpha][sides, 0], x_y[alpha][sides, 1],
-                             linewidth=1.5+cpt_colors/2., color=c, alpha=1.)
-            else:
-                plt.plot(x[alpha], y[alpha], linewidth=2, color=c)
-plt.legend(handles=patches)
-path_map = 'hydro_data/map_france_departement/LIMITE_DEPARTEMENT.shp'
-map_frdep = shp.Reader(path_map)
-for shape in map_frdep.shapeRecords():
-    x = [i[0] for i in shape.shape.points[:]]
-    y = [i[1] + 1.5748588e7 for i in shape.shape.points[:]]
-    plt.plot(x, y, 'k', alpha=0.25)
-plt.axis('off')
-fig.patch.set_facecolor('white')
-plt.show()
-plt.close()
+# nb_sizes = len(max_alphas_peng)
+# stations = range(dim)
+# x_y = np.load('hydro_data/stations_x_y_lambert93.npy')
+# x = x_y[:, 0]
+# y = x_y[:, 1]
+# fig, ax = plt.subplots()
+# ax.scatter(x, y)
+# for i, nb in enumerate(stations):
+#     ax.annotate(nb, (x[i], y[i]))
+# cpt = 2
+# cpt_colors = 2
+# patches = []
+# for alphas in max_alphas_peng:
+#     if len(alphas) > 0:
+#         c = cm.rainbow(cpt_colors/float(nb_sizes))
+#         patches.append(mpatches.Patch(color=c,
+#                                       label='nb stations : ' + str(cpt)))
+#         cpt += 1
+#         cpt_colors += 0.75
+#         for alpha in alphas:
+#             plt.plot(x[alpha], y[alpha], 'o', color=c)
+#             if len(alpha) > 2:
+#                 hull = ConvexHull(x_y[alpha])
+#                 for sides in hull.simplices:
+#                     plt.fill(x_y[alpha][sides, 0], x_y[alpha][sides, 1],
+#                              linewidth=1.5+cpt_colors/2., color=c, alpha=1.)
+#             else:
+#                 plt.plot(x[alpha], y[alpha], linewidth=2, color=c)
+# plt.legend(handles=patches)
+# path_map = 'hydro_data/map_france_departement/LIMITE_DEPARTEMENT.shp'
+# map_frdep = shp.Reader(path_map)
+# for shape in map_frdep.shapeRecords():
+#     x = [i[0] for i in shape.shape.points[:]]
+#     y = [i[1] + 1.5748588e7 for i in shape.shape.points[:]]
+#     plt.plot(x, y, 'k', alpha=0.25)
+# plt.axis('off')
+# fig.patch.set_facecolor('white')
+# plt.show()
+# plt.close()

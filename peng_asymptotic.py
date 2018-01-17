@@ -96,11 +96,11 @@ def eta_peng(x_bin_k, x_bin_2k, alpha, k):
     r_k = r(x_bin_k, alpha, k)
     r_2k = r(x_bin_2k, alpha, k)
     if (r_k == 0 or r_2k == 0):
-        eta_alpha = -float('Inf')
+        eta_alpha = 0.
     elif r_k == r_2k:
-        eta_alpha = -float('Inf')
-    elif r_k < 0.05:
-        eta_alpha = -float('Inf')
+        eta_alpha = 0.
+    # elif r_k < 0.4:
+    #     eta_alpha = -float('Inf')
     else:
         eta_alpha = np.log(2)/np.log(r_2k/float(r_k))
 
@@ -110,7 +110,7 @@ def eta_peng(x_bin_k, x_bin_2k, alpha, k):
 def var_eta_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km,
                  alpha, k):
     rho = r(x_bin_k, alpha, k)
-    if rho == 0. or rho < 0.05:
+    if rho == 0.:  # or rho < 0.4:
         var = 0.
     else:
         rhos = rhos_pairs(x_bin_k, alpha, k)
@@ -160,7 +160,7 @@ def all_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km, delta, k):
     A = {}
     A[s] = alphas_pairs
     while len(A[s]) > s:
-        print s
+        print s, ':', len(A[s])
         A[s + 1] = []
         G = clf.make_graph(A[s], s, dim)
         alphas_to_try = clf.find_alphas_to_try(A[s], G, s)
@@ -171,6 +171,80 @@ def all_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km, delta, k):
                                    alpha, k)
                 test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
                 if eta_alpha > test:
+                    A[s + 1].append(alpha)
+        s += 1
+
+    return A
+
+
+###############
+# Algorithm r #
+###############
+
+
+def alphas_pairs_r(x_bin_k, r_thresh, k):
+    n_dim = np.shape(x_bin_k)[1]
+    alphas = []
+    for (i, j) in it.combinations(range(n_dim), 2):
+        alpha = [i, j]
+        if r(x_bin_k, alpha, k) > r_thresh:
+            alphas.append(alpha)
+
+    return alphas
+
+
+def all_alphas_r(x_bin_k, r_thresh, k):
+    n, dim = np.shape(x_bin_k)
+    alphas_pairs = alphas_pairs_r(x_bin_k, r_thresh, k)
+    s = 2
+    A = {}
+    A[s] = alphas_pairs
+    while len(A[s]) > s:
+        print s, ':', len(A[s])
+        A[s + 1] = []
+        G = clf.make_graph(A[s], s, dim)
+        alphas_to_try = clf.find_alphas_to_try(A[s], G, s)
+        if len(alphas_to_try) > 0:
+            for alpha in alphas_to_try:
+                if r(x_bin_k, alpha, k) > r_thresh:
+                    A[s + 1].append(alpha)
+        s += 1
+
+    return A
+
+
+##################
+# Algorithm freq #
+##################
+
+
+def alphas_pairs_f(x_bin_k, f_thresh, k):
+    n_dim = np.shape(x_bin_k)[1]
+    n_extr = np.sum(np.sum(x_bin_k, axis=1) > 0)
+    alphas = []
+    for (i, j) in it.combinations(range(n_dim), 2):
+        alpha = [i, j]
+        if r(x_bin_k, alpha, k)*k/n_extr > f_thresh:
+            alphas.append(alpha)
+
+    return alphas
+
+
+def all_alphas_f(x_bin_k, f_thresh, k):
+    n, dim = np.shape(x_bin_k)
+    n_extr = np.sum(np.sum(x_bin_k, axis=1) > 0)
+    alphas_pairs = alphas_pairs_f(x_bin_k, f_thresh, k)
+    s = 2
+    A = {}
+    A[s] = alphas_pairs
+    while len(A[s]) > s:
+        print s, ':', len(A[s])
+        A[s + 1] = []
+        G = clf.make_graph(A[s], s, dim)
+        alphas_to_try = clf.find_alphas_to_try(A[s], G, s)
+        if len(alphas_to_try) > 0:
+            for alpha in alphas_to_try:
+                if r(x_bin_k, alpha, k)*k/n_extr > f_thresh:
                     A[s + 1].append(alpha)
         s += 1
 
