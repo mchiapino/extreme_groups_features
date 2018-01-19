@@ -13,6 +13,8 @@ import clef_algo as clf
 import hill_estimator as hill
 import peng_asymptotic as peng
 import kappa_asymptotic as kas
+import simul_multivar_evd as sevd
+
 
 #############
 # Functions #
@@ -149,22 +151,129 @@ def check_errors(charged_alphas, result_alphas, dim):
     return founds, misseds, falses_pure, exct_subsets, exct_supsets
 
 
+def check_if_in_list(list_alphas, alpha):
+    val = False
+    for alpha_test in list_alphas:
+        if set(alpha_test) == set(alpha):
+            val = True
+
+    return val
+
+
+def all_subsets_size(list_alphas, size):
+    subsets_list = []
+    for alpha in list_alphas:
+        if len(alpha) == size:
+            if not check_if_in_list(subsets_list, alpha):
+                subsets_list.append(alpha)
+        if len(alpha) > size:
+            for sub_alpha in it.combinations(alpha, size):
+                if not check_if_in_list(subsets_list, alpha):
+                    subsets_list.append(list(sub_alpha))
+
+    return subsets_list
+
+
+def indexes_true_alphas(all_alphas_2, alphas_2):
+    ind = []
+    for alpha in alphas_2:
+        cpt = 0
+        for alpha_test in all_alphas_2:
+            if set(alpha) == set(alpha_test):
+                ind.append(int(cpt))
+            cpt += 1
+
+    return np.array(ind)
+
+
 # Script
 
-# charged_alphas = sevd.random_alphas(dim, nb_faces, max_size, p_geom)
-# saved_alphas.append(charged_alphas)
-# x_raw = sevd.asym_logistic_noise(dim, charged_alphas, n_samples, as_dep)
+dim = 100
+nb_faces = 75
+max_size = 10
+p_geom = 0.3
+n_samples = int(5e4)
+as_dep = 0.5
+charged_alphas = sevd.random_alphas(dim, nb_faces, max_size, p_geom)
+np.save('alphas.npy', charged_alphas)
+x_rank = sevd.asym_logistic_noise_anr(dim, charged_alphas, n_samples, as_dep)
+np.save('x_rank.npy', x_rank)
+# charged_alphas = list(np.load('alphas.npy'))
+# x_rank = np.load('x_rank.npy')[:n_samples]
 
-x_raw = np.load('hydro_data/raw_discharge.npy')
-x_rank = clf.rank_transformation(x_raw)
-n_samples, dim = np.shape(x_raw)
+# x_raw = np.load('hydro_data/raw_discharge.npy')
+# x_rank = clf.rank_transformation(x_raw)
+# n_samples, dim = np.shape(x_rank)
 
-p_k = 0.025
+p_k = 0.01
 k = int(n_samples*p_k)
 x_bin_k = extreme_points_bin(x_rank, k)
 x_bin_kp = extreme_points_bin(x_rank, k + int(k**(3./4)))
 x_bin_km = extreme_points_bin(x_rank, k - int(k**(3./4)))
 n_extr = np.sum(np.sum(x_bin_k, axis=1) > 0)
+
+all_alphas_3 = [alpha for alpha in it.combinations(range(dim), 3)]
+r_list = np.array([peng.r(x_bin_k, alpha, k) for
+                   alpha in all_alphas_3])
+ind_r = np.argsort(r_list)[::-1][:3000]
+all_alphas_3 = map(list, np.array(all_alphas_3)[ind_r])
+r_list = np.array([peng.r(x_bin_k, alpha, k) for
+                   alpha in all_alphas_3])
+ind_r = np.argsort(r_list)[::-1]
+
+# Clef (0.01, 0.2)
+kappa_min = 0.2
+R = n_samples/(k + 1.)
+x_extr = clf.extrem_points(x_rank, R)
+x_bin_clef = clf.above_thresh_binary(x_extr, R)
+kappa_list = np.array([clf.kappa(x_bin_clef, alpha) for
+                       alpha in all_alphas_3])
+# alphas_clef_0 = clf.all_alphas_clef(x_bin_clef, kappa_min)
+# max_alphas_clef = clf.find_maximal_alphas(alphas_clef_0)
+# alphas_clef = [alpha for alphas in max_alphas_clef for
+#                alpha in alphas]
+
+# plot clef
+alphas_3 = all_subsets_size(charged_alphas, 3)
+ind = indexes_true_alphas(all_alphas_3, alphas_3)
+ind_plot = [np.nonzero(ind_r == ind_i)[0][0] for ind_i in ind]
+plt.plot(range(len(ind_r)), kappa_min*np.ones(len(ind_r)))
+plt.plot(range(len(ind_r)), kappa_list[ind_r], 'ro')
+plt.plot(ind_plot, kappa_list[ind], 'ko')
+plt.plot(range(len(ind_r)), r_list[ind_r], 'bo')
+plt.plot(ind_plot, r_list[ind], 'go')
+
+# # Hill (0.01, 0.01) (0.02, 0.0005)
+# delta = 0.01
+# eta_list = np.array([hill.eta_hill(x_rank, alpha, k) for
+#                      alpha in it.combinations(range(dim), 2)])
+# var_list = np.array([hill.variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km,
+#                                             alpha, k) for
+#                      alpha in it.combinations(range(dim), 2)])
+# var_list_ = var_list * (1 - (var_list < 0))
+# test_list = 1 - st.norm.ppf(1 - delta) * np.sqrt(var_list_/float(k))
+# diff_list = eta_list - test_list
+# alphas_hill_0 = hill.all_alphas_hill(x_rank, x_bin_k, x_bin_kp,
+#                                      x_bin_km, delta, k)
+# max_alphas_hill = clf.find_maximal_alphas(alphas_hill_0)
+# alphas_hill = [alpha for alphas in max_alphas_hill for
+#                alpha in alphas]
+
+# # Peng (0.01, 0.001, 0.4)
+# delta = 0.01  # 0.00005
+# x_bin_2k = extreme_points_bin(x_raw, 2*k)
+# eta_peng_list = np.array([peng.eta_peng(x_bin_k, x_bin_2k, alpha, k) for
+#                           alpha in it.combinations(range(dim), 2)])
+# var_peng_list = np.array([peng.var_eta_peng(x_bin_k, x_bin_2k, x_bin_kp,
+#                                             x_bin_km, alpha, k) for
+#                           alpha in it.combinations(range(dim), 2)])
+# test_peng_list = 1 - st.norm.ppf(1 - delta) * np.sqrt(var_peng_list/float(k))
+# diff_peng_list = eta_peng_list - test_peng_list
+# alphas_peng_0 = peng.all_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp,
+#                                      x_bin_km, delta, k)
+# max_alphas_peng = clf.find_maximal_alphas(alphas_peng_0)
+# alphas_peng = [alpha for alphas in max_alphas_peng for
+#                alpha in alphas]
 
 # # freq threshold (0.01, 0.02)
 # f_thresh = 0.02
@@ -206,51 +315,8 @@ n_extr = np.sum(np.sum(x_bin_k, axis=1) > 0)
 # alphas_kappa = [alpha for alphas in max_alphas_kappa for
 #                 alpha in alphas]
 
-# Peng (0.01, 0.001, 0.4)
-delta = 0.01  # 0.00005
-x_bin_2k = extreme_points_bin(x_raw, 2*k)
-eta_peng_list = np.array([peng.eta_peng(x_bin_k, x_bin_2k, alpha, k) for
-                          alpha in it.combinations(range(dim), 2)])
-r_peng_list = np.array([peng.r(x_bin_k, alpha, k) for
-                        alpha in it.combinations(range(dim), 2)])
-ind_r = np.argsort(r_peng_list)
-var_peng_list = np.array([peng.var_eta_peng(x_bin_k, x_bin_2k, x_bin_kp,
-                                            x_bin_km, alpha, k) for
-                          alpha in it.combinations(range(dim), 2)])
-test_peng_list = 1 - st.norm.ppf(1 - delta) * np.sqrt(var_peng_list/float(k))
-# alphas_peng_0 = peng.all_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp,
-#                                      x_bin_km, delta, k)
-# max_alphas_peng = clf.find_maximal_alphas(alphas_peng_0)
-# alphas_peng = [alpha for alphas in max_alphas_peng for
-#                alpha in alphas]
 
-# # Clef (0.01, 0.2)
-# kappa_min = 0.2
-# R = n_samples/(k + 1.)
-# x_extr = clf.extrem_points(x_rank, R)
-# x_bin_clef = clf.above_thresh_binary(x_extr, R)
-# alphas_clef_0 = clf.all_alphas_clef(x_bin_clef, kappa_min)
-# max_alphas_clef = clf.find_maximal_alphas(alphas_clef_0)
-# alphas_clef = [alpha for alphas in max_alphas_clef for
-#                alpha in alphas]
-
-# # Hill (0.01, 0.01) (0.02, 0.0005)
-# delta = 0.0005
-# eta_list = np.array([hill.eta_hill(x_rank, alpha, k) for
-#                      alpha in it.combinations(range(dim), 2)])
-# var_list = np.array([hill.variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km,
-#                                             alpha, k) for
-#                      alpha in it.combinations(range(dim), 2)])
-# var_list_ = var_list * (1 - (var_list < 0))
-# test_list = 1 - st.norm.ppf(1 - delta) * np.sqrt(var_list_/float(k))
-# alphas_p = hill.alphas_pairs_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km,
-#                                   delta, k)
-# alphas_hill_0 = hill.all_alphas_hill(x_rank, x_bin_k, x_bin_kp,
-#                                      x_bin_km, delta, k)
-# max_alphas_hill = clf.find_maximal_alphas(alphas_hill_0)
-# alphas_hill = [alpha for alphas in max_alphas_hill for
-#                alpha in alphas]
-
+# Visualization
 # nb_sizes = len(max_alphas_peng)
 # stations = range(dim)
 # x_y = np.load('hydro_data/stations_x_y_lambert93.npy')

@@ -138,7 +138,7 @@ def asym_logistic_noise_anr(dim, list_charged_faces, n_sample, as_dep):
         i = 0
         for alpha in list_charged_faces:
             a_dim = len(alpha)
-            Z = log_evd(as_dep, a_dim)*theta[alpha]  # 0.1
+            Z = log_evd(as_dep, a_dim)*theta[alpha]
             cpt = -1
             for j in alpha:
                 cpt += 1

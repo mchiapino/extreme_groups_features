@@ -199,59 +199,59 @@ def check_errors(charged_alphas, result_alphas, dim):
 #         saved_results_damex[p_k].append(alphas_damex)
 # t = time.clock() - t0
 
-time_file_5e4_010075_0 = open('results/time_file_5e4_010075_0.p', 'r')
-t = pickle.load(time_file_5e4_010075_0)
-time_file_5e4_010075_0.close()
-alphas_file_5e4_010075_0 = open('results/alphas_file_5e4_010075_0.p', 'r')
-alphas = pickle.load(alphas_file_5e4_010075_0)
-alphas_file_5e4_010075_0.close()
-hill_file_5e4_010075_0 = open('results/hill_file_5e4_010075_0.p', 'r')
-hill_res = pickle.load(hill_file_5e4_010075_0)
-hill_file_5e4_010075_0.close()
-kappa_file_5e4_010075_0 = open('results/kappa_file_5e4_010075_0.p', 'r')
-kappa_res = pickle.load(kappa_file_5e4_010075_0)
-kappa_file_5e4_010075_0.close()
-peng_file_5e4_010075_0 = open('results/peng_file_5e4_010075_0.p', 'r')
-peng_res = pickle.load(peng_file_5e4_010075_0)
-peng_file_5e4_010075_0.close()
-clef_file_5e4_010075_0 = open('results/clef_file_5e4_010075_0.p', 'r')
-clef_res = pickle.load(clef_file_5e4_010075_0)
-clef_file_5e4_010075_0.close()
-damex_file_5e4_010075_0 = open('results/damex_file_5e4_010075_0.p', 'r')
-damex_res = pickle.load(damex_file_5e4_010075_0)
-damex_file_5e4_010075_0.close()
-params_file_5e4_010075_0 = open('results/params_file_5e4_010075_0.p', 'r')
-params = pickle.load(params_file_5e4_010075_0)
-params_file_5e4_010075_0.close()
+time_file_1e5_010075_0 = open('results/time_file_1e5_010075_0.p', 'r')
+t = pickle.load(time_file_1e5_010075_0)
+time_file_1e5_010075_0.close()
+alphas_file_1e5_010075_0 = open('results/alphas_file_1e5_010075_0.p', 'r')
+alphas = pickle.load(alphas_file_1e5_010075_0)
+alphas_file_1e5_010075_0.close()
+hill_file_1e5_010075_0 = open('results/hill_file_1e5_010075_0.p', 'r')
+hill_res = pickle.load(hill_file_1e5_010075_0)
+hill_file_1e5_010075_0.close()
+kappa_file_1e5_010075_0 = open('results/kappa_file_1e5_010075_0.p', 'r')
+kappa_res = pickle.load(kappa_file_1e5_010075_0)
+kappa_file_1e5_010075_0.close()
+peng_file_1e5_010075_0 = open('results/peng_file_1e5_010075_0.p', 'r')
+peng_res = pickle.load(peng_file_1e5_010075_0)
+peng_file_1e5_010075_0.close()
+clef_file_1e5_010075_0 = open('results/clef_file_1e5_010075_0.p', 'r')
+clef_res = pickle.load(clef_file_1e5_010075_0)
+clef_file_1e5_010075_0.close()
+damex_file_1e5_010075_0 = open('results/damex_file_1e5_010075_0.p', 'r')
+damex_res = pickle.load(damex_file_1e5_010075_0)
+damex_file_1e5_010075_0.close()
+params_file_1e5_010075_0 = open('results/params_file_1e5_010075_0.p', 'r')
+params = pickle.load(params_file_1e5_010075_0)
+params_file_1e5_010075_0.close()
 
 for i in [1, 2, 3, 4]:
-    time_file = open('results/time_file_5e4_010075_' + str(i) + '.p', 'r')
+    time_file = open('results/time_file_1e5_010075_' + str(i) + '.p', 'r')
     t.append(pickle.load(time_file)[0])
     time_file.close()
-    alphas_file = open('results/alphas_file_5e4_010075_' + str(i) + '.p', 'r')
+    alphas_file = open('results/alphas_file_1e5_010075_' + str(i) + '.p', 'r')
     alphas += pickle.load(alphas_file)
     alphas_file.close()
-    params_file = open('results/params_file_5e4_010075_' + str(i) + '.p', 'r')
+    params_file = open('results/params_file_1e5_010075_' + str(i) + '.p', 'r')
     params += pickle.load(params_file)
     params_file.close()
     for p_k in [0.01, 0.0075, 0.005, 0.0025]:
         for delta in [0.001, 0.0001]:
-            hill_file = open('results/hill_file_5e4_010075_' +
+            hill_file = open('results/hill_file_1e5_010075_' +
                              str(i) + '.p', 'r')
             hill_res[(p_k, delta)] += pickle.load(hill_file)[(p_k, delta)]
             hill_file.close()
-            kappa_file = open('results/kappa_file_5e4_010075_' +
+            kappa_file = open('results/kappa_file_1e5_010075_' +
                               str(i) + '.p', 'r')
             kappa_res[(p_k, delta)] += pickle.load(kappa_file)[(p_k, delta)]
             kappa_file.close()
-            peng_file = open('results/peng_file_5e4_010075_' +
+            peng_file = open('results/peng_file_1e5_010075_' +
                              str(i) + '.p', 'r')
             peng_res[(p_k, delta)] += pickle.load(peng_file)[(p_k, delta)]
             peng_file.close()
-        clef_file = open('results/clef_file_5e4_010075_' + str(i) + '.p', 'r')
+        clef_file = open('results/clef_file_1e5_010075_' + str(i) + '.p', 'r')
         clef_res[p_k] += pickle.load(clef_file)[p_k]
         clef_file.close()
-        damex_file = open('results/damex_file_5e4_010075_' +
+        damex_file = open('results/damex_file_1e5_010075_' +
                           str(i) + '.p', 'r')
         damex_res[p_k] += pickle.load(damex_file)[p_k]
         damex_file.close()
@@ -266,61 +266,61 @@ m_clef = {}
 v_clef = {}
 m_damex = {}
 v_damex = {}
-for p_k in [0.0075, 0.005]:
-    for delta in [0.0001]:
+for p_k in [0.01, 0.0075, 0.005, 0.0025]:
+    for delta in [0.001, 0.0001]:
         m_hill[(p_k, delta)] = np.mean([map(len,
                                             check_errors(alphas[i],
-                                                         saved_results_hill[(p_k,
-                                                                             delta)][i],
+                                                         hill_res[(p_k,
+                                                                   delta)][i],
                                                          100))
                                         for i in range(10)], axis=0)
-#         v_hill[(p_k, delta)] = np.std([map(len,
-#                                            check_errors(alphas[i],
-#                                                         hill_res[(p_k,
-#                                                                   delta)][i],
-#                                                         100))
-#                                        for i in range(50)], axis=0)
-#         m_peng[(p_k, delta)] = np.mean([map(len,
-#                                             check_errors(alphas[i],
-#                                                          peng_res[(p_k,
-#                                                                    delta)][i],
-#                                                          100))
-#                                         for i in range(50)], axis=0)
-#         v_peng[(p_k, delta)] = np.std([map(len,
-#                                            check_errors(alphas[i],
-#                                                         peng_res[(p_k,
-#                                                                   delta)][i],
-#                                                         100))
-#                                        for i in range(50)], axis=0)
-#         m_kapp[(p_k, delta)] = np.mean([map(len,
-#                                             check_errors(alphas[i],
-#                                                          kappa_res[(p_k,
-#                                                                     delta)][i],
-#                                                          100))
-#                                         for i in range(50)], axis=0)
-#         v_kapp[(p_k, delta)] = np.std([map(len,
-#                                            check_errors(alphas[i],
-#                                                         kappa_res[(p_k,
-#                                                                    delta)][i],
-#                                                         100))
-#                                        for i in range(50)], axis=0)
-#     m_clef[p_k] = np.mean([map(len,
-#                                check_errors(alphas[i],
-#                                             clef_res[p_k][i],
-#                                             100))
-#                            for i in range(50)], axis=0)
-#     v_clef[p_k] = np.std([map(len,
-#                               check_errors(alphas[i],
-#                                            clef_res[p_k][i],
-#                                            100))
-#                           for i in range(50)], axis=0)
-#     m_damex[p_k] = np.mean([map(len,
-#                                 check_errors(alphas[i],
-#                                              damex_res[p_k][i][:80],
-#                                              100))
-#                             for i in range(50)], axis=0)
-#     v_damex[p_k] = np.std([map(len,
-#                                check_errors(alphas[i],
-#                                             damex_res[p_k][i][:80],
-#                                             100))
-#                            for i in range(50)], axis=0)
+        v_hill[(p_k, delta)] = np.std([map(len,
+                                           check_errors(alphas[i],
+                                                        hill_res[(p_k,
+                                                                  delta)][i],
+                                                        100))
+                                       for i in range(50)], axis=0)
+        m_peng[(p_k, delta)] = np.mean([map(len,
+                                            check_errors(alphas[i],
+                                                         peng_res[(p_k,
+                                                                   delta)][i],
+                                                         100))
+                                        for i in range(50)], axis=0)
+        v_peng[(p_k, delta)] = np.std([map(len,
+                                           check_errors(alphas[i],
+                                                        peng_res[(p_k,
+                                                                  delta)][i],
+                                                        100))
+                                       for i in range(50)], axis=0)
+        m_kapp[(p_k, delta)] = np.mean([map(len,
+                                            check_errors(alphas[i],
+                                                         kappa_res[(p_k,
+                                                                    delta)][i],
+                                                         100))
+                                        for i in range(50)], axis=0)
+        v_kapp[(p_k, delta)] = np.std([map(len,
+                                           check_errors(alphas[i],
+                                                        kappa_res[(p_k,
+                                                                   delta)][i],
+                                                        100))
+                                       for i in range(50)], axis=0)
+    m_clef[p_k] = np.mean([map(len,
+                               check_errors(alphas[i],
+                                            clef_res[p_k][i],
+                                            100))
+                           for i in range(50)], axis=0)
+    v_clef[p_k] = np.std([map(len,
+                              check_errors(alphas[i],
+                                           clef_res[p_k][i],
+                                           100))
+                          for i in range(50)], axis=0)
+    m_damex[p_k] = np.mean([map(len,
+                                check_errors(alphas[i],
+                                             damex_res[p_k][i][:80],
+                                             100))
+                            for i in range(50)], axis=0)
+    v_damex[p_k] = np.std([map(len,
+                               check_errors(alphas[i],
+                                            damex_res[p_k][i][:80],
+                                            100))
+                           for i in range(50)], axis=0)
