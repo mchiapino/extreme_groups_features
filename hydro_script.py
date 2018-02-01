@@ -233,15 +233,15 @@ kappa_list = np.array([clf.kappa(x_bin_clef, alpha) for
 # alphas_clef = [alpha for alphas in max_alphas_clef for
 #                alpha in alphas]
 
-# plot clef
-alphas_3 = all_subsets_size(charged_alphas, 3)
-ind = indexes_true_alphas(all_alphas_3, alphas_3)
-ind_plot = [np.nonzero(ind_r == ind_i)[0][0] for ind_i in ind]
-plt.plot(range(len(ind_r)), kappa_min*np.ones(len(ind_r)))
-plt.plot(range(len(ind_r)), kappa_list[ind_r], 'ro')
-plt.plot(ind_plot, kappa_list[ind], 'ko')
-plt.plot(range(len(ind_r)), r_list[ind_r], 'bo')
-plt.plot(ind_plot, r_list[ind], 'go')
+# # plot clef
+# alphas_3 = all_subsets_size(charged_alphas, 3)
+# ind = indexes_true_alphas(all_alphas_3, alphas_3)
+# ind_plot = [np.nonzero(ind_r == ind_i)[0][0] for ind_i in ind]
+# plt.plot(range(len(ind_r)), kappa_min*np.ones(len(ind_r)))
+# plt.plot(range(len(ind_r)), kappa_list[ind_r], 'ro')
+# plt.plot(ind_plot, kappa_list[ind], 'ko')
+# plt.plot(range(len(ind_r)), r_list[ind_r], 'bo')
+# plt.plot(ind_plot, r_list[ind], 'go')
 
 # # Hill (0.01, 0.01) (0.02, 0.0005)
 # delta = 0.01

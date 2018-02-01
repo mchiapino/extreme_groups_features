@@ -1,40 +1,10 @@
 import numpy as np
-# import itertools as it
 import random as rd
 
 
 ###################
 # Simul functions #
 ###################
-
-def random_alphas(dim, nb_faces, max_size, p_geom):
-    """
-    Output:
-        - random subsets of {1,...,dim}
-    """
-    faces = []
-    cpt_faces = 0
-    loop_cpt = 0
-    while cpt_faces < nb_faces and loop_cpt < 1e2:
-        size_alpha = min(np.random.geometric(p_geom) + 1, max_size)
-        alpha = list(rd.sample(range(dim), size_alpha))
-        test_1 = sum([1*(len(set(alpha) & set(face)) ==
-                         len(alpha)) for face in faces]) == 0
-        test_2 = sum([1*(len(set(alpha) & set(face)) ==
-                         len(face)) for face in faces]) == 0
-        test_3 = len(set(alpha)) == size_alpha
-        while test_1*test_2*test_3 == 0 and loop_cpt < 1e2:
-            alpha = list(rd.sample(range(dim), size_alpha))
-            test_1 = sum([1*(len(set(alpha) & set(face)) ==
-                             len(alpha)) for face in faces]) == 0
-            test_2 = sum([1*(len(set(alpha) & set(face)) ==
-                             len(face)) for face in faces]) == 0
-            test_3 = len(set(alpha)) == size_alpha
-            loop_cpt += 1
-        faces.append(alpha)
-        cpt_faces += 1
-
-    return faces
 
 
 def PS(alpha):
@@ -52,7 +22,7 @@ def log_evd(alpha, d):
     return np.array([np.power(S/W[i], alpha) for i in range(d)])
 
 
-def asymmetric_logistic(dim, list_charged_faces, n_sample, as_dep):
+def asym_logistic(dim, list_charged_faces, n_sample, as_dep):
     X = np.zeros((n_sample, dim))
     theta = np.zeros(dim)
     for j in xrange(dim):

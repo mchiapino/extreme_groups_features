@@ -3,52 +3,29 @@ import itertools as it
 import networkx as nx
 
 
+#############
+# Clef algo #
+#############
+
+
+def clef(x_norm, R, kappa_min):
+    x_bin = x_norm[np.max(x_norm, axis=1) > R] > R
+    alphas_dict = find_alphas(x_bin, kappa_min)
+    alphas = find_maximal_alphas(alphas_dict)
+
+    return alphas
+
+
+def clef_0(x_bin, kappa_min):
+    alphas_dict = find_alphas(x_bin, kappa_min)
+    alphas = find_maximal_alphas(alphas_dict)
+
+    return alphas
+
+
 ##################
 # CLEF functions #
 ##################
-
-def rank_transformation(x_raw):
-    n_sample, n_dim = np.shape(x_raw)
-    mat_rank = np.argsort(x_raw, axis=0)[::-1]
-    x_rank = np.zeros((n_sample, n_dim))
-    for i in xrange(n_dim):
-        x_rank[mat_rank[:, i], i] = np.arange(n_sample) + 1
-    x_pareto = n_sample/x_rank
-
-    return x_pareto
-
-
-def find_R(x_sim, R_0, eps):
-    """
-    Find R s.t only eps*100% of the points remain
-    """
-    R = R_0
-    n_exrt = len(extrem_points(x_sim, R))
-    while n_exrt > eps*len(x_sim):
-        R += 250
-        n_exrt = len(extrem_points(x_sim, R))
-
-    return R
-
-
-def extrem_points(data_rank, R):
-    """
-        Input:
-            -data_rank = data after normalization
-        Output:
-            -Extreme data, X s.t max(X) > R
-    """
-    return data_rank[np.nonzero(np.max(data_rank, axis=1) > R)[0], :]
-
-
-def above_thresh_binary(data_extr, R):
-    """
-        Input:
-            -data_extr = matrix(n x d)
-        Output:
-            -binary data = matrix(n x d), X_ij = 1 if data_extr_ij > R
-    """
-    return 1.*(data_extr > R)
 
 
 def alphas_init(binary_thresh, mu_0):
@@ -64,12 +41,12 @@ def alphas_init(binary_thresh, mu_0):
     asymptotic_pair = []
     for (i, j) in it.combinations(range(n_stations), 2):
         pair_tmp = binary_thresh[:, [i, j]]
-        one_out_of_two = float(len(np.nonzero(np.sum(pair_tmp,
-                                                     axis=1) > 0)[0]))
+        one_out_of_two = np.sum(np.sum(pair_tmp, axis=1) > 0)
         two_on_two = np.sum(np.prod(pair_tmp, axis=1))
-        proba = two_on_two / one_out_of_two
-        if proba > mu_0:
-            asymptotic_pair.append([i, j])
+        if one_out_of_two > 0:
+            proba = two_on_two / one_out_of_two
+            if proba > mu_0:
+                asymptotic_pair.append([i, j])
 
     return asymptotic_pair
 
@@ -93,6 +70,11 @@ def kappa(binary_thresh, alpha):
     return kappa
 
 
+def beta(x_bin, alpha, k):
+
+    return np.sum(np.sum(x_bin[:, alpha], axis=1) > len(alpha) - 2)/float(k)
+
+
 def khi(binary_data, alpha):
     alpha_vect_tmp = binary_data[:, alpha]
     alpha_exist = float(np.sum(np.sum(alpha_vect_tmp, axis=1) > 0))
@@ -101,7 +83,7 @@ def khi(binary_data, alpha):
     return all_alpha/alpha_exist
 
 
-def all_alphas_clef(x_bin, mu):
+def find_alphas(x_bin, mu):
     """
         Input:
             -x_bin = matrix(n x d), X_ij = 1 if x_extr_ij > R
@@ -111,18 +93,19 @@ def all_alphas_clef(x_bin, mu):
     """
     n, dim = np.shape(x_bin)
     alphas = alphas_init(x_bin, mu)
-    k = 2
+    s = 2
     A = {}
-    A[k] = alphas
-    while len(A[k]) > k:
-        A[k + 1] = []
-        G = make_graph(A[k], k, dim)
-        alphas_to_try = find_alphas_to_try(A[k], G, k)
+    A[s] = alphas
+    while len(A[s]) > s:
+        print s, ':', len(A[s])
+        A[s + 1] = []
+        G = make_graph(A[s], s, dim)
+        alphas_to_try = find_alphas_to_try(A[s], G, s)
         if len(alphas_to_try) > 0:
             for alpha in alphas_to_try:
                 if kappa(x_bin, alpha) > mu:
-                    A[k + 1].append(alpha)
-        k += 1
+                    A[s + 1].append(alpha)
+        s += 1
 
     return A
 
@@ -177,7 +160,7 @@ def find_alphas_to_try(alphas, G, k):
     return alphas_to_try
 
 
-def find_maximal_alphas(A):
+def find_maximal_alphas(A, lst=True):
     """
         Input:
             -A = dict {k: list of alphas that contain k features}
@@ -197,6 +180,9 @@ def find_maximal_alphas(A):
         maximal_alphas.append(map(list, alpha_tmp))
         alphas_used = alphas_used + alpha_tmp
     maximal_alphas = maximal_alphas[::-1]
+    if lst:
+        maximal_alphas = [alpha for alphas_ in maximal_alphas
+                          for alpha in alphas_]
 
     return maximal_alphas
 
