@@ -1,6 +1,5 @@
 import numpy as np
 import random as rd
-import itertools as it
 
 
 def gen_random_alphas(dim, nb_faces, max_size, p_geom,
@@ -52,7 +51,7 @@ def alphas_complement(alphas, dim):
 def alphas_matrix(alphas):
     K = len(alphas)
     feats = list(set([j for alph in alphas for j in alph]))
-    d_max = max(feats)
+    d_max = int(max(feats))
     mat_alphas = np.zeros((K, d_max+1))
     for k, alpha in enumerate(alphas):
         mat_alphas[k, alpha] = 1
@@ -69,53 +68,3 @@ def alphas_conversion(alphas):
 
 def alphas_reconvert(alphas, feats):
     return [[feats[j] for j in alpha] for alpha in alphas]
-
-
-def suppress_doublon(alphas):
-    new_list = []
-    for alpha in alphas:
-        subset = False
-        for alpha_t in alphas:
-            if len(alpha_t) > len(alpha):
-                if (len(set(alpha_t) -
-                        set(alpha)) == len(alpha_t) - len(alpha)):
-                    subset = True
-        if not subset:
-            new_list.append(alpha)
-
-    return new_list
-
-
-def check_if_in_list(list_alphas, alpha):
-    val = False
-    for alpha_test in list_alphas:
-        if set(alpha_test) == set(alpha):
-            val = True
-
-    return val
-
-
-def all_subsets_size(list_alphas, size):
-    subsets_list = []
-    for alpha in list_alphas:
-        if len(alpha) == size:
-            if not check_if_in_list(subsets_list, alpha):
-                subsets_list.append(alpha)
-        if len(alpha) > size:
-            for sub_alpha in it.combinations(alpha, size):
-                if not check_if_in_list(subsets_list, alpha):
-                    subsets_list.append(list(sub_alpha))
-
-    return subsets_list
-
-
-def indexes_true_alphas(all_alphas_2, alphas_2):
-    ind = []
-    for alpha in alphas_2:
-        cpt = 0
-        for alpha_test in all_alphas_2:
-            if set(alpha) == set(alpha_test):
-                ind.append(int(cpt))
-            cpt += 1
-
-    return np.array(ind)

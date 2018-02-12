@@ -9,7 +9,7 @@ import networkx as nx
 
 
 def clef(x_norm, R, kappa_min):
-    x_bin = x_norm[np.max(x_norm, axis=1) > R] > R
+    x_bin = 1.*(x_norm > R)
     alphas_dict = find_alphas(x_bin, kappa_min)
     alphas = find_maximal_alphas(alphas_dict)
 
@@ -70,11 +70,6 @@ def kappa(binary_thresh, alpha):
     return kappa
 
 
-def beta(x_bin, alpha, k):
-
-    return np.sum(np.sum(x_bin[:, alpha], axis=1) > len(alpha) - 2)/float(k)
-
-
 def khi(binary_data, alpha):
     alpha_vect_tmp = binary_data[:, alpha]
     alpha_exist = float(np.sum(np.sum(alpha_vect_tmp, axis=1) > 0))
@@ -93,19 +88,18 @@ def find_alphas(x_bin, mu):
     """
     n, dim = np.shape(x_bin)
     alphas = alphas_init(x_bin, mu)
-    s = 2
+    k = 2
     A = {}
-    A[s] = alphas
-    while len(A[s]) > s:
-        print s, ':', len(A[s])
-        A[s + 1] = []
-        G = make_graph(A[s], s, dim)
-        alphas_to_try = find_alphas_to_try(A[s], G, s)
+    A[k] = alphas
+    while len(A[k]) > k:
+        A[k + 1] = []
+        G = make_graph(A[k], k, dim)
+        alphas_to_try = find_alphas_to_try(A[k], G, k)
         if len(alphas_to_try) > 0:
             for alpha in alphas_to_try:
                 if kappa(x_bin, alpha) > mu:
-                    A[s + 1].append(alpha)
-        s += 1
+                    A[k + 1].append(alpha)
+        k += 1
 
     return A
 

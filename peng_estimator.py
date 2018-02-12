@@ -37,7 +37,7 @@ def alphas_init_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km, delta, k):
     for (i, j) in it.combinations(range(n_dim), 2):
         alpha = [i, j]
         eta = eta_peng(x_bin_k, x_bin_2k, alpha, k)
-        var = var_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km, alpha, k)
+        var = var_eta_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km, alpha, k)
         test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
         if eta > test:
             alphas.append(alpha)
@@ -53,15 +53,15 @@ def find_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km, delta, k):
     A = {}
     A[s] = alphas_pairs
     while len(A[s]) > s:
-        print s, ':', len(A[s])
+        print s
         A[s + 1] = []
         G = clf.make_graph(A[s], s, dim)
         alphas_to_try = clf.find_alphas_to_try(A[s], G, s)
         if len(alphas_to_try) > 0:
             for alpha in alphas_to_try:
                 eta_alpha = eta_peng(x_bin_k, x_bin_2k, alpha, k)
-                var = var_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km,
-                               alpha, k)
+                var = var_eta_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km,
+                                   alpha, k)
                 test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
                 if eta_alpha > test:
                     A[s + 1].append(alpha)
@@ -75,28 +75,28 @@ def find_alphas_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km, delta, k):
 ##################
 
 
-def eta_peng(x_bin_k, x_bin_2k, alpha, k, peng_thresh=0.):
+def eta_peng(x_bin_k, x_bin_2k, alpha, k):
     r_k = extr.r(x_bin_k, alpha, k)
     r_2k = extr.r(x_bin_2k, alpha, k)
     if (r_k == 0 or r_2k == 0):
-        eta_alpha = 0.
+        eta_alpha = -float('Inf')
     elif r_k == r_2k:
-        eta_alpha = 0.
-    elif r_k < peng_thresh:
-        eta_alpha = 0.
+        eta_alpha = -float('Inf')
+    elif r_k < 0.05:
+        eta_alpha = -float('Inf')
     else:
         eta_alpha = np.log(2)/np.log(r_2k/float(r_k))
 
     return eta_alpha
 
 
-def var_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km,
-             alpha, k):
+def var_eta_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km,
+                 alpha, k):
     rho = extr.r(x_bin_k, alpha, k)
     if rho == 0. or rho < 0.05:
         var = 0.
     else:
-        rhos = extr.rhos_alpha_pairs(x_bin_k, alpha, k)
+        rhos = extr.rhos_pairs(x_bin_k, alpha, k)
         r_p = extr.r_partial_derv_centered(x_bin_k, x_bin_kp, x_bin_km,
                                            alpha, k)
         r_ij = {(i, j): extr.r(extr.partial_matrix(x_bin_2k, x_bin_k, j),

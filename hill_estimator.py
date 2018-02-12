@@ -36,7 +36,7 @@ def alphas_init_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k):
     for (i, j) in it.combinations(range(n_dim), 2):
         alpha = [i, j]
         eta = eta_hill(x_rank, alpha, k)
-        var = var_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
+        var = variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
         test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
         if eta > test:
             alphas.append(alpha)
@@ -52,14 +52,14 @@ def find_alphas_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k):
     A = {}
     A[s] = alphas_pairs
     while len(A[s]) > s:
-        print s, ':', len(A[s])
+        print s
         A[s + 1] = []
         G = clf.make_graph(A[s], s, dim)
         alphas_to_try = clf.find_alphas_to_try(A[s], G, s)
         if len(alphas_to_try) > 0:
             for alpha in alphas_to_try:
                 eta = eta_hill(x_rank, alpha, k)
-                var = var_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
+                var = variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
                 test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
                 if eta > test:
                     A[s + 1].append(alpha)
@@ -83,7 +83,7 @@ def eta_hill(x_rank, alpha, k):
     return eta_h
 
 
-def var_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k):
+def variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k):
     rho_alpha = extr.r(x_bin_k, alpha, k)
     if rho_alpha == 0.:
         var = 0.
