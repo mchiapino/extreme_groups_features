@@ -1,6 +1,7 @@
 import numpy as np
 import random as rd
 import itertools as it
+import networkx as nx
 
 
 def gen_random_alphas(dim, nb_faces, max_size, p_geom,
@@ -71,7 +72,7 @@ def alphas_reconvert(alphas, feats):
     return [[feats[j] for j in alpha] for alpha in alphas]
 
 
-def suppress_doublon(alphas):
+def suppress_sub_alphas(alphas):
     new_list = []
     for alpha in alphas:
         subset = False
@@ -119,3 +120,85 @@ def indexes_true_alphas(all_alphas_2, alphas_2):
             cpt += 1
 
     return np.array(ind)
+
+
+def all_sub_alphas(alphas):
+    all_alphas = []
+    for alpha in alphas:
+        k_alpha = len(alpha)
+        if k_alpha == 2:
+            all_alphas.append(alpha)
+        else:
+            for k in range(2, k_alpha):
+                for beta in it.combinations(alpha, k):
+                    all_alphas.append(beta)
+            all_alphas.append(alpha)
+    sizes = map(len, all_alphas)
+    all_alphas = np.array(all_alphas)[np.argsort(sizes)]
+
+    return map(list, set(map(tuple, all_alphas)))
+
+
+def dict_size(all_alphas):
+    sizes = np.array(map(len, all_alphas))
+    dict_alphas = {k: np.array(all_alphas)[np.nonzero(sizes == k)]
+                   for k in range(2, max(sizes)+1)}
+
+    return dict_alphas
+
+
+def alphas_to_test(dict_all_alphas, d):
+    all_alphas = {2: [alpha for alpha in it.combinations(range(d), 2)]}
+    for s in dict_all_alphas.keys()[1:]:
+        all_alphas[s] = alphas_to_test_size(dict_all_alphas[s-1], s-1, d)
+
+    return all_alphas
+
+
+def dict_falses(dict_true_alphas, d):
+    dict_alphas_test = alphas_to_test(dict_true_alphas, d)
+    dict_false_alphas = {}
+    for s in dict_true_alphas.keys():
+        ind_s = indexes_true_alphas(dict_alphas_test[s], dict_true_alphas[s])
+        ind_s_c = list(set(range(len(dict_alphas_test[s]))) - set(ind_s))
+        dict_false_alphas[s] = np.array(dict_alphas_test[s])[ind_s_c]
+
+    return dict_false_alphas
+
+
+def make_graph_s(alphas, s, d):
+    vect_alphas = list_alphas_to_vect(alphas, d)
+    nb_alphas = len(vect_alphas)
+    G = nx.Graph()
+    Nodes = range(nb_alphas)
+    G.add_nodes_from(Nodes)
+    Edges = np.nonzero(np.triu(np.dot(vect_alphas, vect_alphas.T) == s - 1))
+    G.add_edges_from([(Edges[0][i], Edges[1][i])
+                      for i in range(len(Edges[0]))])
+
+    return G
+
+
+def alphas_to_test_size(alphas, s, d):
+    G = make_graph_s(alphas, s, d)
+    alphas_to_try = []
+    cliques = list(nx.find_cliques(G))
+    ind_to_try = np.nonzero(np.array(map(len, cliques)) == s + 1)[0]
+    for j in ind_to_try:
+        clique_feature = set([])
+        for i in range(len(cliques[j])):
+            clique_feature = clique_feature | set(alphas[cliques[j][i]])
+        clique_feature = list(clique_feature)
+        if len(clique_feature) == s + 1:
+            alphas_to_try.append(clique_feature)
+
+    return alphas_to_try
+
+
+def list_alphas_to_vect(alphas, d):
+    nb_alphas = len(alphas)
+    vect_alphas = np.zeros((nb_alphas, d))
+    for i, alpha in enumerate(alphas):
+        vect_alphas[i, alpha] = 1.
+
+    return vect_alphas
