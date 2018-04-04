@@ -32,7 +32,7 @@ def asym_logistic(dim, list_charged_faces, n_sample, as_dep):
                 cpt += 1
         theta[j] = 1./cpt
     for n in xrange(n_sample):
-        X[n, :] = theta * np.random.exponential(size=dim)**-1
+        # X[n, :] = theta * np.random.exponential(size=dim)**-1
         for alpha in list_charged_faces:
             Z = theta[alpha] * log_evd(as_dep, len(alpha))
             X[n, alpha] = np.amax(np.vstack((X[n, alpha], Z)), axis=0)
@@ -61,7 +61,7 @@ def asym_logistic_noise(dim, list_charged_faces, n_sample, as_dep):
                 if j in alpha:
                     cpt += 1
             theta[j] = 1./cpt
-        X[n, :] = theta * np.random.exponential(size=dim)**-1
+        # X[n, :] = theta * np.random.exponential(size=dim)**-1
         for k, alpha in enumerate(list_charged_faces):
             Z = theta[alpha] * log_evd(as_dep, len(alpha))
             X[n, alpha] = np.amax(np.vstack((X[n, alpha], Z)), axis=0)
