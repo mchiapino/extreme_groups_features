@@ -12,7 +12,7 @@ def map_visualisation(alphas, d):
     alphas = ga.dict_size(alphas).values()
     nb_sizes = len(alphas)
     stations = range(d)
-    x_y = np.load('hydro_data/stations_x_y_lambert93.npy')
+    x_y = np.load('data/hydro_data/stations_x_y_lambert93.npy')
     x = x_y[:, 0]
     y = x_y[:, 1]
     fig, ax = plt.subplots()
@@ -39,7 +39,7 @@ def map_visualisation(alphas, d):
             else:
                 plt.plot(x[alpha], y[alpha], linewidth=2, color=c)
     plt.legend(handles=patches)
-    path_map = 'hydro_data/map_france_departement/LIMITE_DEPARTEMENT.shp'
+    path_map = 'data/hydro_data/map_france_departement/LIMITE_DEPARTEMENT.shp'
     map_frdep = shp.Reader(path_map)
     for shape in map_frdep.shapeRecords():
         x = [i[0] for i in shape.shape.points[:]]
@@ -49,7 +49,7 @@ def map_visualisation(alphas, d):
     fig.patch.set_facecolor('white')
     plt.show()
 
-    return 0
+    return None
 
 
 def latlon_to_lambert93(lat, lon):

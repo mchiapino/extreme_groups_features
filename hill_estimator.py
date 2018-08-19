@@ -95,6 +95,8 @@ def variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k):
                                         for
                                         (i, j) in it.combinations(alpha, 2)]) +
                                  sum(r_p[j]**2 for j in alpha))/rho_alpha
+    if var < 0:
+        var = 0.
 
     return var
 

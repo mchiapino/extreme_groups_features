@@ -100,7 +100,7 @@ def var_kappa(x_bin_k, x_bin_kp, x_bin_km, alpha, k):
     kappa_alpha = clf.kappa(x_bin_k, alpha)
     kappa_p = kappa_partial_derivs(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
     rhos_alpha = rhos(x_bin_k, alpha, k)
-    beta_alpha = clf.compute_beta(x_bin_k, alpha)
+    beta_alpha = float(clf.compute_beta(x_bin_k, alpha))
     var = ((1 - kappa_alpha) * kappa_alpha *
            (beta_alpha**-1 - sum([kappa_p[j] for j in alpha])) +
            2*sum([kappa_p[i] * kappa_p[j] * rhos_alpha[i, j]

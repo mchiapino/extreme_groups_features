@@ -162,7 +162,8 @@ def dict_falses(dict_true_alphas, d):
     for s in dict_true_alphas.keys():
         ind_s = indexes_true_alphas(dict_alphas_test[s], dict_true_alphas[s])
         ind_s_c = list(set(range(len(dict_alphas_test[s]))) - set(ind_s))
-        dict_false_alphas[s] = np.array(dict_alphas_test[s])[ind_s_c]
+        if len(np.array(dict_alphas_test[s])[ind_s_c]) > 0:
+            dict_false_alphas[s] = np.array(dict_alphas_test[s])[ind_s_c]
 
     return dict_false_alphas
 
