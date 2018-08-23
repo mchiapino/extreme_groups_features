@@ -82,8 +82,8 @@ def eta_peng(x_bin_k, x_bin_2k, alpha, k):
         eta_alpha = 0.
     elif r_k == r_2k:
         eta_alpha = 0.
-    # elif r_k < 0.05:
-    #     eta_alpha = 0.
+    elif r_k < 0.05:
+        eta_alpha = 0.
     else:
         eta_alpha = np.log(2)/np.log(r_2k/float(r_k))
 
@@ -93,7 +93,7 @@ def eta_peng(x_bin_k, x_bin_2k, alpha, k):
 def var_eta_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km,
                  alpha, k):
     rho = extr.r(x_bin_k, alpha, k)
-    if rho == 0.:  # or rho < 0.05:
+    if rho == 0. or rho < 0.05:
         var = 0.
     else:
         rhos = extr.rhos_alpha_pairs(x_bin_k, alpha, k)
