@@ -40,7 +40,7 @@ def univar_declust(X_data, s, thresh):
     occ_peaks = []
     val_peaks = []
     n_peaks = np.zeros(n_stations)
-    for i in xrange(n_stations):
+    for i in range(n_stations):
         clust = []
         data = X_data[:, i]
         ind = np.nonzero(data > thresh[i])[0]
@@ -119,7 +119,7 @@ def multivar_declust(occ_peaks, val_peaks, n_peaks, s_0):
         clusts_peaks.append([])
         clusts_stations.append([])
         for i in clust:
-            for s in xrange(n_stations):
+            for s in range(n_stations):
                 if (i in occ_peaks[s]):
                     i_p = occ_peaks[s].index(i)
                     clusts_peaks[k].append([i, s, val_peaks[s][i_p]])
@@ -146,9 +146,9 @@ def overall_index(occ_peaks):
     overall_ind.sort()
     n_ind = len(overall_ind)
     index_stations = []
-    for i in xrange(n_ind):
+    for i in range(n_ind):
         index_stations.append([])
-        for k in xrange(n_stations):
+        for k in range(n_stations):
             if (overall_ind[i] in occ_peaks[k]):
                 index_stations[i].append(k)
 
@@ -165,7 +165,7 @@ def compute_threshold(data_raw, pctile):
     """
     n_days, n_stations = np.shape(data_raw)
     thresh = np.zeros(n_stations)
-    for i in xrange(n_stations):
+    for i in range(n_stations):
         thresh[i] = np.percentile(data_raw[:, i], pctile)
 
     return thresh
@@ -187,7 +187,7 @@ def clusters_to_events(data_raw, clusts):
     n_events = len(clusts)
     data_clustered = np.zeros((n_events, n_stations))
     events_ind = np.zeros((n_events, 2))
-    for i in xrange(n_events):
+    for i in range(n_events):
         i_start = min(clusts[i])
         i_end = max(clusts[i])
         events_ind[i, :] = np.array([i_start, i_end])
@@ -208,12 +208,12 @@ def constant_temps(data_raw):
             for each station i : mean of delta = time above max/2
     """
     n_days, n_stations = np.shape(data_raw)
-    years_index = years_ind('hydro_data/Dates.txt')
+    years_index = years_ind('data/hydro_data/Dates.txt')
     const_temps = np.zeros(n_stations)
     n_years = len(years_index)
-    for j in xrange(n_stations):
+    for j in range(n_stations):
         delta = []
-        for i in xrange(n_years - 1):
+        for i in range(n_years - 1):
             year_data = data_raw[years_index[i]:years_index[i + 1], j]
             arg_vmax = np.argmax(year_data)
             vmax = np.max(year_data)
@@ -260,7 +260,7 @@ def rank_transformation(x_raw):
     n_sample, n_dim = np.shape(x_raw)
     mat_rank = np.argsort(x_raw, axis=0)[::-1]
     x_rank = np.zeros((n_sample, n_dim))
-    for i in xrange(n_dim):
+    for i in range(n_dim):
         x_rank[mat_rank[:, i], i] = np.arange(n_sample) + 1
     x_pareto = n_sample/x_rank
 

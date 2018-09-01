@@ -25,13 +25,13 @@ def log_evd(alpha, d):
 def asym_logistic(dim, list_charged_faces, n_sample, as_dep):
     X = np.zeros((n_sample, dim))
     theta = np.zeros(dim)
-    for j in xrange(dim):
+    for j in range(dim):
         cpt = 1
         for alpha in list_charged_faces:
             if j in alpha:
                 cpt += 1
         theta[j] = 1./cpt
-    for n in xrange(n_sample):
+    for n in range(n_sample):
         # X[n, :] = theta * np.random.exponential(size=dim)**-1
         for alpha in list_charged_faces:
             Z = theta[alpha] * log_evd(as_dep, len(alpha))
@@ -47,7 +47,7 @@ def asym_logistic_noise(dim, list_charged_faces, n_sample, as_dep):
             feature add to every charged faces for each sample
     """
     X = np.zeros((n_sample, dim))
-    for n in xrange(n_sample):
+    for n in range(n_sample):
         list_noise_feats = []
         for alpha in list_charged_faces:
             feats_to_choose = list(set(range(dim)) - set(alpha))
@@ -55,7 +55,7 @@ def asym_logistic_noise(dim, list_charged_faces, n_sample, as_dep):
             alpha.append(noise_feat)
             list_noise_feats.append(noise_feat)
         theta = np.zeros(dim)
-        for j in xrange(dim):
+        for j in range(dim):
             cpt = 1
             for alpha in list_charged_faces:
                 if j in alpha:
@@ -77,7 +77,7 @@ def asym_logistic_noise_anr(dim, list_charged_faces, n_sample, as_dep):
             feature add or remove (50/50) to every alpha for each sample
     """
     X = np.zeros((n_sample, dim))
-    for n in xrange(n_sample):
+    for n in range(n_sample):
         list_noise_st = []
         list_add = []
         for alpha in list_charged_faces:
@@ -97,7 +97,7 @@ def asym_logistic_noise_anr(dim, list_charged_faces, n_sample, as_dep):
             dim_dep = dim_dep | set(alpha)
         list_singletons = list(set(range(dim)) - dim_dep)
         theta = np.ones(dim)
-        for i in xrange(dim):
+        for i in range(dim):
             cpt = 0
             for alpha in list_charged_faces:
                 if i in alpha:

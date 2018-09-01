@@ -22,47 +22,56 @@ def kappa_as(x_rank, delta, k, kappa_min):
     return alphas
 
 
-def kappa_as_0(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k, kappa_min):
+def kappa_as_0(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k, kappa_min, var_max=1e3, verbose=0):
     alphas_dict = find_alphas_kappa(kappa_min, x_bin_k, x_bin_kp, x_bin_km,
-                                    delta, k)
+                                    delta, k, var_max, verbose)
     alphas = clf.find_maximal_alphas(alphas_dict)
 
     return alphas
 
 
-def alphas_init_kappa(kappa_min, x_bin_k, x_bin_kp, x_bin_km, delta, k):
+def alphas_init_kappa(kappa_min, x_bin_k, x_bin_kp, x_bin_km, delta, k, var_max, verbose):
     n_dim = np.shape(x_bin_k)[1]
     alphas = []
     for (i, j) in it.combinations(range(n_dim), 2):
         alpha = [i, j]
         kap = clf.kappa(x_bin_k, alpha)
-        var = var_kappa(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
-        test = kappa_min + st.norm.ppf(delta) * np.sqrt(var/float(k))
-        if kap > test:
-            alphas.append(alpha)
+        if kap > 0.:
+            var = var_kappa(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
+            if verbose and var > var_max:
+                print(f'var={var} for {alpha}')
+            if var > 0. and var < var_max:
+                test = kappa_min + st.norm.ppf(delta) * np.sqrt(var/float(k))
+                if kap > test:
+                    alphas.append(alpha)
 
     return alphas
 
 
-def find_alphas_kappa(kappa_min, x_bin_k, x_bin_kp, x_bin_km, delta, k):
+def find_alphas_kappa(kappa_min, x_bin_k, x_bin_kp, x_bin_km, delta, k, var_max, verbose):
     n, dim = np.shape(x_bin_k)
     alphas = alphas_init_kappa(kappa_min, x_bin_k, x_bin_kp, x_bin_km,
-                               delta, k)
+                               delta, k, var_max, verbose)
     s = 2
     A = {}
     A[s] = alphas
     while len(A[s]) > s:
-        print s, ':', len(A[s])
+        print(s, ':', len(A[s]))
         A[s + 1] = []
         G = clf.make_graph(A[s], s, dim)
         alphas_to_try = clf.find_alphas_to_try(A[s], G, s)
         if len(alphas_to_try) > 0:
             for alpha in alphas_to_try:
                 kap = clf.kappa(x_bin_k, alpha)
-                var = var_kappa(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
-                test = kappa_min + st.norm.ppf(delta) * np.sqrt(var/float(k))
-                if kap > test:
-                    A[s + 1].append(alpha)
+                if kap > 0:
+                    var = var_kappa(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
+                    if verbose and var > var_max:
+                        print(f'var={var} for {alpha}')
+                    if var > 0 and var < var_max:
+                        test = kappa_min + \
+                            st.norm.ppf(delta) * np.sqrt(var/float(k))
+                        if kap > test:
+                            A[s + 1].append(alpha)
         s += 1
 
     return A
@@ -108,8 +117,6 @@ def var_kappa(x_bin_k, x_bin_kp, x_bin_km, alpha, k):
            sum([kappa_p[i]**2 for i in alpha]) +
            kappa_alpha * sum([kappa_p[j] * (1 - rhos_alpha[j] * beta_alpha**-1)
                               for j in alpha]))
-    if var < 0.:
-        var = 0.
 
     return var
 

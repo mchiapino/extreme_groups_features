@@ -133,17 +133,17 @@ def all_sub_alphas(alphas):
                 for beta in it.combinations(alpha, k):
                     all_alphas.append(beta)
             all_alphas.append(alpha)
-    sizes = map(len, all_alphas)
+    sizes = list(map(len, all_alphas))
     all_alphas = np.array(all_alphas)[np.argsort(sizes)]
 
-    return map(list, set(map(tuple, all_alphas)))
+    return list(map(list, set(map(tuple, all_alphas))))
 
 
 def dict_size(all_alphas):
-    sizes = np.array(map(len, all_alphas))
-    size_set = set(sizes)
+    sizes = np.array(list(map(len, all_alphas)))
+    size_set = list(set(sizes))
     dict_alphas = {k: np.array(all_alphas)[np.nonzero(sizes == k)]
-                   for k in size_set}  # range(2, max(sizes)+1)
+                   for k in size_set}
 
     return dict_alphas
 
@@ -185,7 +185,7 @@ def alphas_to_test_size(alphas, s, d):
     G = make_graph_s(alphas, s, d)
     alphas_to_try = []
     cliques = list(nx.find_cliques(G))
-    ind_to_try = np.nonzero(np.array(map(len, cliques)) == s + 1)[0]
+    ind_to_try = np.nonzero(np.array(list(map(len, cliques))) == s + 1)[0]
     for j in ind_to_try:
         clique_feature = set([])
         for i in range(len(cliques[j])):

@@ -22,47 +22,66 @@ def hill(x_rank, delta, k):
     return alphas
 
 
-def hill_0(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k):
+def hill_0(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k, var_max=1e3, verbose=0):
     alphas_dict = find_alphas_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km,
-                                   delta, k)
+                                   delta, k, var_max, verbose)
     alphas = clf.find_maximal_alphas(alphas_dict)
 
     return alphas
 
 
-def alphas_init_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k):
+def alphas_init_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k, var_max, verbose):
     n_dim = np.shape(x_bin_k)[1]
     alphas = []
     for (i, j) in it.combinations(range(n_dim), 2):
         alpha = [i, j]
-        eta = eta_hill(x_rank, alpha, k)
-        var = variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
-        test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
-        if eta > max(0, test):
-            alphas.append(alpha)
+        rho = extr.r(x_bin_k, alpha, k)
+        if rho > 0.:
+            var = variance_eta_hill(rho, x_bin_k, x_bin_kp, x_bin_km,
+                                    alpha, k)
+            if verbose and var >= var_max:
+                print(f'var={var} for {alpha}')
+            if var > 0 and var < var_max:
+                eta = eta_hill(x_rank, alpha, k)
+                if verbose and eta <= 0:
+                    print(f'eta={eta} for {alpha}')
+                else:
+                    test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
+                    if eta > test:
+                        alphas.append(alpha)
 
     return alphas
 
 
-def find_alphas_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k):
+def find_alphas_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km, delta, k, var_max, verbose):
     n, dim = np.shape(x_bin_k)
     alphas_pairs = alphas_init_hill(x_rank, x_bin_k, x_bin_kp, x_bin_km,
-                                    delta, k)
+                                    delta, k, var_max, verbose)
     s = 2
     A = {}
     A[s] = alphas_pairs
     while len(A[s]) > s:
-        print s
+        print(s, ':', len(A[s]))
         A[s + 1] = []
         G = clf.make_graph(A[s], s, dim)
         alphas_to_try = clf.find_alphas_to_try(A[s], G, s)
         if len(alphas_to_try) > 0:
             for alpha in alphas_to_try:
-                eta = eta_hill(x_rank, alpha, k)
-                var = variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k)
-                test = 1 - st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
-                if eta > max(0, test):
-                    A[s + 1].append(alpha)
+                rho = extr.r(x_bin_k, alpha, k)
+                if rho > 0.:
+                    var = variance_eta_hill(rho, x_bin_k, x_bin_kp, x_bin_km,
+                                            alpha, k)
+                    if verbose and var >= var_max:
+                        print(f'var={var} for {alpha}')
+                    if var > 0 and var < var_max:
+                        eta = eta_hill(x_rank, alpha, k)
+                        if eta <= 0 and verbose:
+                            print(f'eta){eta} for {alpha}')
+                        else:
+                            test = 1 - \
+                                st.norm.ppf(1 - delta) * np.sqrt(var/float(k))
+                            if eta > test:
+                                A[s + 1].append(alpha)
         s += 1
 
     return A
@@ -83,20 +102,14 @@ def eta_hill(x_rank, alpha, k):
     return eta_h
 
 
-def variance_eta_hill(x_bin_k, x_bin_kp, x_bin_km, alpha, k):
-    rho_alpha = extr.r(x_bin_k, alpha, k)
-    if rho_alpha == 0.:
-        var = 0.
-    else:
-        rhos_alpha = extr.rhos_alpha_pairs(x_bin_k, alpha, k)
-        r_p = extr.r_partial_derv_centered(x_bin_k, x_bin_kp, x_bin_km,
-                                           alpha, k)
-        var = 1 - 2*rho_alpha + (2*sum([r_p[i]*r_p[j]*rhos_alpha[i, j]
-                                        for
-                                        (i, j) in it.combinations(alpha, 2)]) +
-                                 sum(r_p[j]**2 for j in alpha))/rho_alpha
-    if var < 0:
-        var = 0.
+def variance_eta_hill(rho_alpha, x_bin_k, x_bin_kp, x_bin_km, alpha, k):
+    rhos_alpha = extr.rhos_alpha_pairs(x_bin_k, alpha, k)
+    r_p = extr.r_partial_derv_centered(x_bin_k, x_bin_kp, x_bin_km,
+                                       alpha, k)
+    var = 1 - 2*rho_alpha + (2*sum([r_p[i]*r_p[j]*rhos_alpha[i, j]
+                                    for
+                                    (i, j) in it.combinations(alpha, 2)]) +
+                             sum(r_p[j]**2 for j in alpha))/rho_alpha
 
     return var
 

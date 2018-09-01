@@ -96,6 +96,7 @@ def find_alphas(x_bin, mu):
     A = {}
     A[k] = alphas
     while len(A[k]) > k:
+        print(k, ':', len(A[k]))
         A[k + 1] = []
         G = make_graph(A[k], k, dim)
         alphas_to_try = find_alphas_to_try(A[k], G, k)
@@ -146,7 +147,7 @@ def find_alphas_to_try(alphas, G, k):
     """
     alphas_to_try = []
     cliques = list(nx.find_cliques(G))
-    ind_to_try = np.nonzero(np.array(map(len, cliques)) == k + 1)[0]
+    ind_to_try = np.nonzero(np.array(list(map(len, cliques))) == k + 1)[0]
     for j in ind_to_try:
         clique_feature = set([])
         for i in range(len(cliques[j])):
@@ -167,15 +168,15 @@ def find_maximal_alphas(A, lst=True):
     """
     k = len(A.keys()) + 1
     maximal_alphas = [A[k]]
-    alphas_used = map(set, A[k])
-    for i in xrange(1, k - 1):
-        alpha_tmp = map(set, A[k - i])
+    alphas_used = list(map(set, A[k]))
+    for i in range(1, k - 1):
+        alpha_tmp = list(map(set, A[k - i]))
         for alpha in A[k - i]:
             for alpha_test in alphas_used:
                 if len(set(alpha) & alpha_test) == k - i:
                     alpha_tmp.remove(set(alpha))
                     break
-        maximal_alphas.append(map(list, alpha_tmp))
+        maximal_alphas.append(list(map(list, alpha_tmp)))
         alphas_used = alphas_used + alpha_tmp
     maximal_alphas = maximal_alphas[::-1]
     if lst:
