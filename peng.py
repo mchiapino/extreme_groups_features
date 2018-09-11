@@ -64,9 +64,9 @@ def find_faces_peng(x_bin_k, x_bin_2k, x_bin_kp, x_bin_km, delta, k, rho_min, ve
     size = 2
     faces_dict = {}
     faces_dict[size] = faces_pairs
-    print('face size : nb faces')
+    # print('face size : nb faces')
     while len(faces_dict[size]) > size:
-        print(size, ':', len(faces_dict[size]))
+        # print(size, ':', len(faces_dict[size]))
         faces_dict[size + 1] = []
         faces_to_try = ut.candidate_faces(faces_dict[size], size, dim)
         if faces_to_try:
