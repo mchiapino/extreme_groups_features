@@ -5,11 +5,11 @@ import matplotlib.patches as mpatches
 from scipy.spatial import ConvexHull
 import shapefile as shp
 
-import generate_alphas as ga
+import utilities as ut
 
 
 def map_visualisation(alphas, d):
-    alphas = list(ga.dict_size(alphas).values())
+    alphas = list(ut.dict_size(alphas).values())
     nb_sizes = len(alphas)
     stations = range(d)
     x_y = np.load('data/hydro_data/stations_x_y_lambert93.npy')
